@@ -5,6 +5,16 @@ import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
+const optionalUrl = (
+  field: string,
+  message: string,
+  options: { require_tld?: boolean } = {},
+) =>
+  body(field)
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL({ require_tld: options.require_tld ?? false })
+    .withMessage(message);
+
 // =============================================
 // AUTHORITIES ROUTES
 // =============================================
@@ -334,8 +344,8 @@ router.post('/frameworks', authenticate, authorize('Super Admin', 'Admin', 'Edit
   body('description').notEmpty().withMessage('Description is required'),
   body('author').optional().isString(),
   body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-  body('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
@@ -384,8 +394,8 @@ router.put('/frameworks/:id', authenticate, authorize('Super Admin', 'Admin', 'E
   body('description').optional().notEmpty().withMessage('Description cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-  body('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
@@ -480,8 +490,8 @@ router.post('/principles', authenticate, authorize('Super Admin', 'Admin', 'Edit
   body('description').notEmpty().withMessage('Description is required'),
   body('author').optional().isString(),
   body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-  body('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
@@ -529,8 +539,8 @@ router.put('/principles/:id', authenticate, authorize('Super Admin', 'Admin', 'E
   body('description').optional().notEmpty().withMessage('Description cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-  body('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
@@ -624,8 +634,8 @@ router.post('/investment-products', authenticate, authorize('Super Admin', 'Admi
   body('description').notEmpty().withMessage('Description is required'),
   body('author').optional().isString(),
   body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-  body('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
@@ -673,8 +683,8 @@ router.put('/investment-products/:id', authenticate, authorize('Super Admin', 'A
   body('description').optional().notEmpty().withMessage('Description cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-  body('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
@@ -791,7 +801,7 @@ router.post('/member-strategies-projects', authenticate, authorize('Super Admin'
   body('memberId').notEmpty().withMessage('Member ID is required').isInt(),
   body('categoryId').notEmpty().withMessage('Category ID is required').isInt(),
   body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL().withMessage('File URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL', { require_tld: true }),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
 ], async (req: any, res: any) => {
   try {
@@ -826,7 +836,7 @@ router.put('/member-strategies-projects/:id', authenticate, authorize('Super Adm
   body('memberId').optional().isInt(),
   body('categoryId').optional().isInt(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
-  body('fileUrl').optional().isURL().withMessage('File URL must be a valid URL'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL', { require_tld: true }),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
 ], async (req: any, res: any) => {
   try {
