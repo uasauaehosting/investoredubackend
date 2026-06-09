@@ -1,0 +1,306 @@
+import { PublicationCategory } from '../models/Publications';
+
+export interface PublicationSeedRow {
+  title: string;
+  description: string | null;
+  authority_name: string;
+  category: PublicationCategory;
+  file_url: string;
+}
+
+export const PUBLICATIONS_SEED_DATA: PublicationSeedRow[] = [
+  // Jordan Securities Commission
+  {
+    title: 'General Guidelines',
+    description: null,
+    authority_name: 'Jordan Securities Commission',
+    category: 'General',
+    file_url: 'http://www.jsc.gov.jo/page/investor_culture.aspx',
+  },
+  {
+    title: 'Investor Education and Training Events',
+    description: null,
+    authority_name: 'Jordan Securities Commission',
+    category: 'General',
+    file_url: 'http://pdf.usaid.gov/pdf_docs/Pnacy596.pdf',
+  },
+  {
+    title: 'Investor Education and Training Events Assistance',
+    description: null,
+    authority_name: 'Jordan Securities Commission',
+    category: 'Study',
+    file_url: 'http://pdf.usaid.gov/pdf_docs/Pnacy596.pdf',
+  },
+  {
+    title: 'Publications',
+    description: null,
+    authority_name: 'Jordan Securities Commission',
+    category: 'Guide',
+    file_url: 'http://www.jsc.gov.jo/page/publications.aspx',
+  },
+  {
+    title: 'Awareness messages',
+    description: null,
+    authority_name: 'Jordan Securities Commission',
+    category: 'Others',
+    file_url: 'http://www.jsc.gov.jo/page/awareness_messages.aspx',
+  },
+
+  // Commission d'Organisation et de Surveillance des opérations de Bourse
+  {
+    title: 'Quiz',
+    description: null,
+    authority_name: "Commission d'Organisation et de Surveillance des opérations de Bourse",
+    category: 'Others',
+    file_url: 'http://www.cosob.org/quiz/',
+  },
+  {
+    title: 'Videos',
+    description: null,
+    authority_name: "Commission d'Organisation et de Surveillance des opérations de Bourse",
+    category: 'Others',
+    file_url: 'http://www.cosob.org/videos/',
+  },
+  {
+    title: 'Games',
+    description: null,
+    authority_name: "Commission d'Organisation et de Surveillance des opérations de Bourse",
+    category: 'Others',
+    file_url: 'http://www.cosob.org/jeux/',
+  },
+  {
+    title: 'Financial Glossary',
+    description: null,
+    authority_name: "Commission d'Organisation et de Surveillance des opérations de Bourse",
+    category: 'Others',
+    file_url: 'http://www.cosob.org/lexique/',
+  },
+  {
+    title: 'Investor Guides',
+    description: '(French Only)',
+    authority_name: "Commission d'Organisation et de Surveillance des opérations de Bourse",
+    category: 'Guide',
+    file_url: 'http://www.cosob.org/guides/',
+  },
+
+  // Saudi Capital Market Authority
+  {
+    title: 'Capital Market Investment Basics',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'General',
+    file_url: 'https://cma.org.sa/en/Awareness/InvestmentBasics/Pages/default.aspx',
+  },
+  {
+    title: 'Capital Market',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'General',
+    file_url: 'https://cma.org.sa/en/Awareness/Pages/CapitalMarket.aspx',
+  },
+  {
+    title: 'Investment Funds',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'General',
+    file_url: 'https://cma.org.sa/en/Awareness/IFs/Pages/default.aspx',
+  },
+  {
+    title: 'Investment Portfolio Management',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'General',
+    file_url: 'https://cma.org.sa/en/Awareness/Pages/IFManagement.aspx',
+  },
+  {
+    title: 'Information Sources',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'General',
+    file_url: 'https://cma.org.sa/en/Awareness/InformationSources/Pages/default.aspx',
+  },
+  {
+    title: 'The Financial Ratio',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'General',
+    file_url: 'https://cma.org.sa/en/Awareness/Pages/financialRatios.aspx',
+  },
+  {
+    title: 'Investor Awareness Guidebooks',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'Guide',
+    file_url: 'https://cma.org.sa/en/Awareness/Publications/Pages/booklets.aspx',
+  },
+  {
+    title: 'Glossary',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'Others',
+    file_url: 'https://cma.org.sa/en/Awareness/Pages/Glossary.aspx',
+  },
+  {
+    title: 'Investor Awareness Infographics',
+    description: null,
+    authority_name: 'Saudi Capital Market Authority',
+    category: 'Others',
+    file_url: 'https://cma.org.sa/en/Awareness/Publications/Pages/infographics.aspx',
+  },
+
+  // Syrian Commission on financial markets and securities
+  {
+    title: 'General publications',
+    description: null,
+    authority_name: 'Syrian Commission on financial markets and securities',
+    category: 'General',
+    file_url: 'http://scfms.sy/awarenessLetters/ar/37/0/نشرات-التوعية',
+  },
+  {
+    title: 'International Organizations Reports',
+    description: null,
+    authority_name: 'Syrian Commission on financial markets and securities',
+    category: 'Report',
+    file_url: 'http://scfms.sy/page/ar/1854/0/تقارير-المنظمات-الدولية',
+  },
+  {
+    title: 'Researches',
+    description: null,
+    authority_name: 'Syrian Commission on financial markets and securities',
+    category: 'Study',
+    file_url: 'http://scfms.sy/StudiesResarch/ar/2205/0/دراسات-وأبحاث',
+  },
+  {
+    title: 'Terms',
+    description: null,
+    authority_name: 'Syrian Commission on financial markets and securities',
+    category: 'Others',
+    file_url: 'http://scfms.sy/page/ar/516/0/مصطلحات',
+  },
+  {
+    title: 'Quiz',
+    description: null,
+    authority_name: 'Syrian Commission on financial markets and securities',
+    category: 'Others',
+    file_url: 'http://scfms.sy/quiz/ar/41/0/اختبر-معلوماتك',
+  },
+
+  // Palestine Capital Market Authority
+  {
+    title: 'Researches and Studies',
+    description: null,
+    authority_name: 'Palestine Capital Market Authority',
+    category: 'Report',
+    file_url: 'http://www.pcma.ps/portal/awareness/SitePages/researchesAndStudiesAuth.aspx',
+  },
+  {
+    title: 'Awareness messages',
+    description: null,
+    authority_name: 'Palestine Capital Market Authority',
+    category: 'Guide',
+    file_url: 'http://www.pcma.ps/portal/awareness/Pages/Awarness_msgs.aspx',
+  },
+  {
+    title: 'seminars & Conferences',
+    description: null,
+    authority_name: 'Palestine Capital Market Authority',
+    category: 'Others',
+    file_url: 'http://www.pcma.ps/portal/awareness/SitePages/seminarsConferancesAuth.aspx',
+  },
+
+  // Qatar Financial Markets Authority
+  {
+    title: 'Investor Corner',
+    description: null,
+    authority_name: 'Qatar Financial Markets Authority',
+    category: 'General',
+    file_url: 'https://www.qe.com.qa/ar/investor-corner',
+  },
+  {
+    title: 'QE Publications',
+    description: null,
+    authority_name: 'Qatar Financial Markets Authority',
+    category: 'General',
+    file_url: 'https://www.qe.com.qa/ar/qe-publications',
+  },
+  {
+    title: 'Investor Awareness',
+    description: null,
+    authority_name: 'Qatar Financial Markets Authority',
+    category: 'Brochure',
+    file_url: 'https://www.qfma.org.qa/Arabic/MediaCenter/Pages/InvestorAwareness.aspx',
+  },
+
+  // Kuwait Capital Markets Authority
+  {
+    title: 'Awareness',
+    description: null,
+    authority_name: 'Kuwait Capital Markets Authority',
+    category: 'General',
+    file_url: 'https://www.cma.gov.kw/ar/web/cma/awareness',
+  },
+
+  // Capital Markets Authority of Lebanon
+  {
+    title: 'Investor Education',
+    description: null,
+    authority_name: 'Capital Markets Authority of Lebanon',
+    category: 'General',
+    file_url: 'https://www.cma.gov.lb/investor-education/',
+  },
+
+  // Financial Regulatory Authority - Egypt
+  {
+    title: 'Index',
+    description: null,
+    authority_name: 'Financial Regulatory Authority - Egypt',
+    category: 'General',
+    file_url: 'http://www.iinvest.gov.eg/general/index.jsp',
+  },
+  {
+    title: 'Reports',
+    description: null,
+    authority_name: 'Financial Regulatory Authority - Egypt',
+    category: 'Report',
+    file_url: 'http://www.fra.gov.eg/content/efsa_ar/efsa_pages/reports_printing.htm',
+  },
+
+  // Autorité Marocaine du Marché des Capitaux (AMMC)
+  {
+    title: 'Investor Awareness',
+    description: null,
+    authority_name: 'Autorité Marocaine du Marché des Capitaux (AMMC)',
+    category: 'General',
+    file_url: 'http://www.ammc.ma/en/espace-epargnants',
+  },
+
+  // Conseil du Marché Financier - Tunisia
+  {
+    title: 'Investor Protection',
+    description: null,
+    authority_name: 'Conseil du Marché Financier - Tunisia',
+    category: 'General',
+    file_url: 'http://www.bvmt.com.tn/fr/content/protection-de-linvestisseur',
+  },
+  {
+    title: 'Investor Guide',
+    description: null,
+    authority_name: 'Conseil du Marché Financier - Tunisia',
+    category: 'Guide',
+    file_url: 'http://www.bvmt.com.tn/sites/default/files/articles/guide-de-linvestisseur_1.pdf',
+  },
+  {
+    title: 'Financial products Guide',
+    description: null,
+    authority_name: 'Conseil du Marché Financier - Tunisia',
+    category: 'Guide',
+    file_url: 'http://www.bvmt.com.tn/sites/default/files/articles/guide-des-produits-boursiers.pdf',
+  },
+  {
+    title: 'Investor Protection',
+    description: null,
+    authority_name: 'Conseil du Marché Financier - Tunisia',
+    category: 'Guide',
+    file_url: 'http://www.bvmt.com.tn/fr/content/protection-de-linvestisseur',
+  },
+];

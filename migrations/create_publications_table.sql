@@ -16,11 +16,45 @@ CREATE TABLE IF NOT EXISTS publications (
     INDEX idx_date_published (date_published)
 );
 
-INSERT INTO publications (title, description, authority_name, category, file_url, date_published) VALUES
-('Investor Awareness Brochure', 'A brochure introducing capital market basics for retail investors.', 'Jordan Securities Commission', 'Brochure', '#', '2024-03-10'),
-('Corporate Governance Code', 'Code of corporate governance for listed companies.', 'Saudi Capital Market Authority', 'Code', '#', '2024-02-18'),
-('General Investor Education Materials', 'General educational resources for new investors.', 'Qatar Financial Markets Authority', 'General', '#', '2024-01-22'),
-('Guide to Mutual Funds', 'A practical guide to understanding mutual fund investments.', 'Kuwait Capital Markets Authority', 'Guide', '#', '2023-12-05'),
-('Annual Market Development Report', 'Annual report on market development and investor protection.', 'Financial Regulatory Authority - Egypt', 'Report', '#', '2023-11-30'),
-('Financial Literacy Study', 'Regional study on financial literacy levels among retail investors.', 'Capital Market Authority', 'Study', '#', '2023-10-15'),
-('Investor Protection Handbook', 'Handbook covering investor rights and complaint procedures.', 'Palestine Capital Market Authority', 'Others', '#', '2023-09-08');
+DELETE FROM publications;
+
+INSERT INTO publications (title, description, authority_name, category, file_url) VALUES
+('General Guidelines', NULL, 'Jordan Securities Commission', 'General', 'http://www.jsc.gov.jo/page/investor_culture.aspx'),
+('Investor Education and Training Events', NULL, 'Jordan Securities Commission', 'General', 'http://pdf.usaid.gov/pdf_docs/Pnacy596.pdf'),
+('Investor Education and Training Events Assistance', NULL, 'Jordan Securities Commission', 'Study', 'http://pdf.usaid.gov/pdf_docs/Pnacy596.pdf'),
+('Publications', NULL, 'Jordan Securities Commission', 'Guide', 'http://www.jsc.gov.jo/page/publications.aspx'),
+('Awareness messages', NULL, 'Jordan Securities Commission', 'Others', 'http://www.jsc.gov.jo/page/awareness_messages.aspx'),
+('Quiz', NULL, 'Commission d''Organisation et de Surveillance des opérations de Bourse', 'Others', 'http://www.cosob.org/quiz/'),
+('Videos', NULL, 'Commission d''Organisation et de Surveillance des opérations de Bourse', 'Others', 'http://www.cosob.org/videos/'),
+('Games', NULL, 'Commission d''Organisation et de Surveillance des opérations de Bourse', 'Others', 'http://www.cosob.org/jeux/'),
+('Financial Glossary', NULL, 'Commission d''Organisation et de Surveillance des opérations de Bourse', 'Others', 'http://www.cosob.org/lexique/'),
+('Investor Guides', '(French Only)', 'Commission d''Organisation et de Surveillance des opérations de Bourse', 'Guide', 'http://www.cosob.org/guides/'),
+('Capital Market Investment Basics', NULL, 'Saudi Capital Market Authority', 'General', 'https://cma.org.sa/en/Awareness/InvestmentBasics/Pages/default.aspx'),
+('Capital Market', NULL, 'Saudi Capital Market Authority', 'General', 'https://cma.org.sa/en/Awareness/Pages/CapitalMarket.aspx'),
+('Investment Funds', NULL, 'Saudi Capital Market Authority', 'General', 'https://cma.org.sa/en/Awareness/IFs/Pages/default.aspx'),
+('Investment Portfolio Management', NULL, 'Saudi Capital Market Authority', 'General', 'https://cma.org.sa/en/Awareness/Pages/IFManagement.aspx'),
+('Information Sources', NULL, 'Saudi Capital Market Authority', 'General', 'https://cma.org.sa/en/Awareness/InformationSources/Pages/default.aspx'),
+('The Financial Ratio', NULL, 'Saudi Capital Market Authority', 'General', 'https://cma.org.sa/en/Awareness/Pages/financialRatios.aspx'),
+('Investor Awareness Guidebooks', NULL, 'Saudi Capital Market Authority', 'Guide', 'https://cma.org.sa/en/Awareness/Publications/Pages/booklets.aspx'),
+('Glossary', NULL, 'Saudi Capital Market Authority', 'Others', 'https://cma.org.sa/en/Awareness/Pages/Glossary.aspx'),
+('Investor Awareness Infographics', NULL, 'Saudi Capital Market Authority', 'Others', 'https://cma.org.sa/en/Awareness/Publications/Pages/infographics.aspx'),
+('General publications', NULL, 'Syrian Commission on financial markets and securities', 'General', 'http://scfms.sy/awarenessLetters/ar/37/0/نشرات-التوعية'),
+('International Organizations Reports', NULL, 'Syrian Commission on financial markets and securities', 'Report', 'http://scfms.sy/page/ar/1854/0/تقارير-المنظمات-الدولية'),
+('Researches', NULL, 'Syrian Commission on financial markets and securities', 'Study', 'http://scfms.sy/StudiesResarch/ar/2205/0/دراسات-وأبحاث'),
+('Terms', NULL, 'Syrian Commission on financial markets and securities', 'Others', 'http://scfms.sy/page/ar/516/0/مصطلحات'),
+('Quiz', NULL, 'Syrian Commission on financial markets and securities', 'Others', 'http://scfms.sy/quiz/ar/41/0/اختبر-معلوماتك'),
+('Researches and Studies', NULL, 'Palestine Capital Market Authority', 'Report', 'http://www.pcma.ps/portal/awareness/SitePages/researchesAndStudiesAuth.aspx'),
+('Awareness messages', NULL, 'Palestine Capital Market Authority', 'Guide', 'http://www.pcma.ps/portal/awareness/Pages/Awarness_msgs.aspx'),
+('seminars & Conferences', NULL, 'Palestine Capital Market Authority', 'Others', 'http://www.pcma.ps/portal/awareness/SitePages/seminarsConferancesAuth.aspx'),
+('Investor Corner', NULL, 'Qatar Financial Markets Authority', 'General', 'https://www.qe.com.qa/ar/investor-corner'),
+('QE Publications', NULL, 'Qatar Financial Markets Authority', 'General', 'https://www.qe.com.qa/ar/qe-publications'),
+('Investor Awareness', NULL, 'Qatar Financial Markets Authority', 'Brochure', 'https://www.qfma.org.qa/Arabic/MediaCenter/Pages/InvestorAwareness.aspx'),
+('Awareness', NULL, 'Kuwait Capital Markets Authority', 'General', 'https://www.cma.gov.kw/ar/web/cma/awareness'),
+('Investor Education', NULL, 'Capital Markets Authority of Lebanon', 'General', 'https://www.cma.gov.lb/investor-education/'),
+('Index', NULL, 'Financial Regulatory Authority - Egypt', 'General', 'http://www.iinvest.gov.eg/general/index.jsp'),
+('Reports', NULL, 'Financial Regulatory Authority - Egypt', 'Report', 'http://www.fra.gov.eg/content/efsa_ar/efsa_pages/reports_printing.htm'),
+('Investor Awareness', NULL, 'Autorité Marocaine du Marché des Capitaux (AMMC)', 'General', 'http://www.ammc.ma/en/espace-epargnants'),
+('Investor Protection', NULL, 'Conseil du Marché Financier - Tunisia', 'General', 'http://www.bvmt.com.tn/fr/content/protection-de-linvestisseur'),
+('Investor Guide', NULL, 'Conseil du Marché Financier - Tunisia', 'Guide', 'http://www.bvmt.com.tn/sites/default/files/articles/guide-de-linvestisseur_1.pdf'),
+('Financial products Guide', NULL, 'Conseil du Marché Financier - Tunisia', 'Guide', 'http://www.bvmt.com.tn/sites/default/files/articles/guide-des-produits-boursiers.pdf'),
+('Investor Protection', NULL, 'Conseil du Marché Financier - Tunisia', 'Guide', 'http://www.bvmt.com.tn/fr/content/protection-de-linvestisseur');

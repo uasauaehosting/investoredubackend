@@ -15,10 +15,16 @@ function parseListParam(value: string | string[] | undefined): string[] {
 
 router.get('/', async (req, res) => {
   try {
+    const isActiveParam = req.query.is_active as string | undefined;
     const filters: PublicationFilters = {
       authorities: parseListParam(req.query.authorities as string | string[] | undefined),
       categories: parseListParam(req.query.categories as string | string[] | undefined),
-      is_active: req.query.is_active === 'false' ? false : true,
+      is_active:
+        isActiveParam === 'all'
+          ? null
+          : isActiveParam === 'false'
+            ? false
+            : true,
     };
 
     const publications = await PublicationsModel.getAll(filters);

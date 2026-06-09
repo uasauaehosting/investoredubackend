@@ -614,6 +614,15 @@ router.get('/investment-products/slug/:slug', async (req: any, res: any) => {
   }
 });
 
+router.get('/investment-products/admin', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req: any, res: any) => {
+  try {
+    const products = await InvestmentProductModel.findAllAdmin();
+    res.json(products);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.get('/investment-products/:id', async (req: any, res: any) => {
   try {
     const productId = parseInt(req.params.id);
@@ -637,6 +646,7 @@ router.post('/investment-products', authenticate, authorize('Super Admin', 'Admi
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
+  body('slug').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
     return Number.isInteger(value) && value > 0;
@@ -663,6 +673,7 @@ router.post('/investment-products', authenticate, authorize('Super Admin', 'Admi
       fileUrl: req.body.fileUrl || '',
       imageUrl: req.body.imageUrl || '',
       content: req.body.content || '',
+      slug: req.body.slug || null,
       authorityId: req.body.authorityId || null,
       categoryId: req.body.categoryId || null,
       views: req.body.views || 0,
@@ -686,6 +697,7 @@ router.put('/investment-products/:id', authenticate, authorize('Super Admin', 'A
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
+  body('slug').optional().isString(),
   body('authorityId').optional().custom((value) => {
     if (value === null || value === undefined) return true;
     return Number.isInteger(value) && value > 0;

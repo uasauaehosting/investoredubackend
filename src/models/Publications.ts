@@ -25,7 +25,8 @@ export interface Publication {
 export interface PublicationFilters {
   authorities?: string[];
   categories?: string[];
-  is_active?: boolean;
+  /** Omit for active-only (public default). `null` returns all records (admin). */
+  is_active?: boolean | null;
 }
 
 export class PublicationsModel {
@@ -42,7 +43,9 @@ export class PublicationsModel {
     `;
     const params: unknown[] = [];
 
-    if (filters.is_active !== undefined) {
+    if (filters.is_active === null) {
+      // Admin view: include active and inactive records.
+    } else if (filters.is_active !== undefined) {
       query += ' AND is_active = ?';
       params.push(filters.is_active);
     } else {

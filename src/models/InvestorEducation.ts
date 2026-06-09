@@ -86,6 +86,7 @@ export interface IInvestmentProduct {
   fileUrl: string;
   imageUrl: string;
   content?: string;
+  slug?: string;
   authorityId?: number;
   categoryId?: number;
   views: number;
@@ -791,6 +792,7 @@ function mapInvestmentProductRow(result: any): IInvestmentProduct {
     fileUrl: result.file_url,
     imageUrl: result.image_url,
     content: result.content,
+    slug: result.slug ?? undefined,
     authorityId: result.authority_id,
     categoryId: result.category_id,
     views: result.views,
@@ -804,34 +806,24 @@ function mapInvestmentProductRow(result: any): IInvestmentProduct {
 // Investment Product Model
 export class InvestmentProductModel {
   static async create(productData: Omit<IInvestmentProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = productData;
+    const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = productData;
     const query = `
-      INSERT INTO investment_products (title, description, author, date, file_url, image_url, content, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO investment_products (title, description, author, date, file_url, image_url, content, slug, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
+    return await executeInsert(query, [title, description, author, date, fileUrl, imageUrl, content, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
   }
 
   static async findAll(): Promise<IInvestmentProduct[]> {
-    const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC';
+    const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC, id DESC';
     const results = await executeQuery<any>(query);
-    return results.map(result => ({
-      id: result.id,
-      title: result.title,
-      description: result.description,
-      author: result.author,
-      date: result.date,
-      fileUrl: result.file_url,
-      imageUrl: result.image_url,
-      content: result.content,
-      authorityId: result.authority_id,
-      categoryId: result.category_id,
-      views: result.views,
-      downloads: result.downloads,
-      isActive: result.is_active,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at
-    }));
+    return results.map((result) => mapInvestmentProductRow(result));
+  }
+
+  static async findAllAdmin(): Promise<IInvestmentProduct[]> {
+    const query = 'SELECT * FROM investment_products ORDER BY date DESC, id DESC';
+    const results = await executeQuery<any>(query);
+    return results.map((result) => mapInvestmentProductRow(result));
   }
 
   static async findById(id: number): Promise<IInvestmentProduct | null> {
@@ -843,17 +835,14 @@ export class InvestmentProductModel {
     return null;
   }
 
-  static async findBySlug(slug: string): Promise<(IInvestmentProduct & { slug?: string }) | null> {
+  static async findBySlug(slug: string): Promise<IInvestmentProduct | null> {
     const query = 'SELECT * FROM investment_products WHERE slug = ? AND is_active = true';
     const result = await executeSingleQuery<any>(query, [slug]);
-    if (result) {
-      return { ...mapInvestmentProductRow(result), slug: result.slug };
-    }
-    return null;
+    return result ? mapInvestmentProductRow(result) : null;
   }
 
   static async update(id: number, updateData: Partial<IInvestmentProduct>): Promise<boolean> {
-    const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;
+    const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -884,6 +873,10 @@ export class InvestmentProductModel {
     if (content !== undefined) {
       updateFields.push('content = ?');
       updateValues.push(content);
+    }
+    if (slug !== undefined) {
+      updateFields.push('slug = ?');
+      updateValues.push(slug);
     }
     if (authorityId !== undefined) {
       updateFields.push('authority_id = ?');

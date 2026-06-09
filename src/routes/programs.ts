@@ -1,5 +1,6 @@
 import express from 'express';
 import { ProgramsModel } from '../models/Programs';
+import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -169,7 +170,7 @@ router.get('/search/:searchTerm', async (req, res) => {
 });
 
 // Create new program
-router.post('/', async (req, res) => {
+router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req, res) => {
   try {
     const programData = req.body;
     
@@ -219,7 +220,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update program
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = { ...req.body, id: parseInt(id) };
@@ -269,7 +270,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete program (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, authorize('Super Admin', 'Admin'), async (req, res) => {
   try {
     const { id } = req.params;
     const success = await ProgramsModel.softDelete(parseInt(id));

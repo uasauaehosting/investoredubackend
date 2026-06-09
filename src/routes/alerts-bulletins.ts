@@ -1,16 +1,23 @@
 import express from 'express';
 import { AlertsBulletinsModel, CreateAlertBulletinData, UpdateAlertBulletinData, AlertBulletinFilters } from '../models/AlertsBulletins';
+import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
 // GET /api/alerts-bulletins - Get all alerts/bulletins with optional filters
 router.get('/', async (req, res) => {
     try {
+        const isActiveParam = req.query.is_active as string | undefined;
         const filters: AlertBulletinFilters = {
             type: req.query.type as 'Alert' | 'Bulletin',
             authority: req.query.authority as string,
             year: req.query.year as string,
-            is_active: req.query.is_active === 'true' ? true : req.query.is_active === 'false' ? false : undefined
+            is_active:
+                isActiveParam === 'all'
+                    ? null
+                    : isActiveParam === 'false'
+                        ? false
+                        : true,
         };
 
         const alertsBulletins = await AlertsBulletinsModel.getAll(filters);
@@ -75,7 +82,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/alerts-bulletins - Create new alert/bulletin
-router.post('/', async (req, res) => {
+router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const alertBulletinData: CreateAlertBulletinData = req.body;
 
@@ -102,7 +109,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/alerts-bulletins/:id - Update alert/bulletin
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
@@ -132,7 +139,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/alerts-bulletins/:id - Delete alert/bulletin
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticate, authorize('Super Admin', 'Admin'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {

@@ -42,7 +42,7 @@ export interface AlertBulletinFilters {
     type?: 'Alert' | 'Bulletin';
     authority?: string;
     year?: string;
-    is_active?: boolean;
+    is_active?: boolean | null;
 }
 
 export class AlertsBulletinsModel {
@@ -50,9 +50,9 @@ export class AlertsBulletinsModel {
     static async getAll(filters: AlertBulletinFilters = {}): Promise<AlertBulletin[]> {
         let query = `
             SELECT 
-                id, title, type, description, authority_name, 
+                id, title, type, description, authority_name, year,
                 DATE_FORMAT(date_published, '%Y-%m-%dT%H:%i:%s.000Z') as date_published, 
-                content, is_active, 
+                content, link, is_active, display_order,
                 DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at, 
                 DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%s.000Z') as updated_at
             FROM alerts_bulletins WHERE 1=1
@@ -64,12 +64,17 @@ export class AlertsBulletinsModel {
             params.push(filters.type);
         }
 
-        if (filters.authority) {
+        if (filters.authority && filters.authority !== 'All Authorities') {
             query += ` AND authority_name = ?`;
             params.push(filters.authority);
         }
 
-        if (filters.is_active !== undefined) {
+        if (filters.year && filters.year !== 'All Years') {
+            query += ` AND (year = ? OR YEAR(date_published) = ?)`;
+            params.push(filters.year, filters.year);
+        }
+
+        if (filters.is_active !== undefined && filters.is_active !== null) {
             query += ` AND is_active = ?`;
             params.push(filters.is_active);
         }
@@ -89,11 +94,11 @@ export class AlertsBulletinsModel {
             content: result.content,
             contentAr: result.content_ar,
             authority_name: result.authority_name || '',
-            year: new Date(result.date_published).getFullYear().toString(),
+            year: result.year || new Date(result.date_published).getFullYear().toString(),
             date_published: result.date_published,
-            link: '', // No link column in database
+            link: result.link || '',
             is_active: result.is_active,
-            display_order: 0, // No display_order column in database
+            display_order: result.display_order ?? 0,
             created_at: result.created_at,
             updated_at: result.updated_at
         }));
@@ -103,9 +108,9 @@ export class AlertsBulletinsModel {
     static async getById(id: number): Promise<AlertBulletin | null> {
         const query = `
             SELECT 
-                id, title, type, description, content, authority_name, 
+                id, title, type, description, content, authority_name, year,
                 DATE_FORMAT(date_published, '%Y-%m-%dT%H:%i:%s.000Z') as date_published, 
-                is_active, 
+                link, is_active, display_order,
                 DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at, 
                 DATE_FORMAT(updated_at, '%Y-%m-%dT%H:%i:%s.000Z') as updated_at
             FROM alerts_bulletins WHERE id = ?
@@ -125,11 +130,11 @@ export class AlertsBulletinsModel {
             content: result.content,
             contentAr: result.content_ar,
             authority_name: result.authority_name || '',
-            year: new Date(result.date_published).getFullYear().toString(),
+            year: result.year || new Date(result.date_published).getFullYear().toString(),
             date_published: result.date_published,
-            link: '', // No link column in database
+            link: result.link || '',
             is_active: result.is_active,
-            display_order: 0, // No display_order column in database
+            display_order: result.display_order ?? 0,
             created_at: result.created_at,
             updated_at: result.updated_at
         };
@@ -137,13 +142,39 @@ export class AlertsBulletinsModel {
 
     // Create new alert/bulletin
     static async create(data: CreateAlertBulletinData): Promise<AlertBulletin> {
-        const { title, titleAr, type, description, descriptionAr, content, contentAr, authority_name, date_published } = data;
+        const {
+            title,
+            titleAr,
+            type,
+            description,
+            descriptionAr,
+            content,
+            contentAr,
+            authority_name,
+            year,
+            date_published,
+            link,
+            display_order,
+        } = data;
         const query = `
             INSERT INTO alerts_bulletins 
-            (title, title_ar, type, description, description_ar, content, content_ar, authority_name, date_published, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            (title, title_ar, type, description, description_ar, content, content_ar, authority_name, year, date_published, link, display_order, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         `;
-        const insertId = await executeInsert(query, [title, titleAr, type, description, descriptionAr, content, contentAr, authority_name, date_published]);
+        const insertId = await executeInsert(query, [
+            title,
+            titleAr,
+            type,
+            description,
+            descriptionAr,
+            content,
+            contentAr,
+            authority_name,
+            year,
+            date_published,
+            link ?? '',
+            display_order ?? 0,
+        ]);
         return await this.getById(insertId);
     }
 
@@ -162,7 +193,10 @@ export class AlertsBulletinsModel {
             'content': 'content',
             'contentAr': 'content_ar',
             'authority_name': 'authority_name',
+            'year': 'year',
             'date_published': 'date_published',
+            'link': 'link',
+            'display_order': 'display_order',
             'is_active': 'is_active'
         };
 
