@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_FTP_PUBLIC_BASE_URL = exports.DEFAULT_FTP_REMOTE_PATH = void 0;
 exports.isFtpConfigured = isFtpConfigured;
+exports.resolvePublicBaseUrl = resolvePublicBaseUrl;
 exports.getFtpConfig = getFtpConfig;
 exports.getPublicUploadUrl = getPublicUploadUrl;
 exports.normalizeMediaUrl = normalizeMediaUrl;
@@ -25,6 +26,17 @@ function isFtpConfigured() {
 }
 exports.DEFAULT_FTP_REMOTE_PATH = '/investoredu/investoredu/uploads';
 exports.DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
+const WRONG_SINGLE_UPLOADS_BASE = /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/?$/i;
+function resolvePublicBaseUrl() {
+    const envBase = (process.env.FTP_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+    if (!envBase) {
+        return exports.DEFAULT_FTP_PUBLIC_BASE_URL;
+    }
+    if (WRONG_SINGLE_UPLOADS_BASE.test(envBase)) {
+        return exports.DEFAULT_FTP_PUBLIC_BASE_URL;
+    }
+    return envBase;
+}
 const LEGACY_FTP_REMOTE_PATHS = [
     '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
     '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
@@ -45,8 +57,8 @@ function getFtpConfig() {
     const host = process.env.FTP_HOST;
     const user = process.env.FTP_USER;
     const password = process.env.FTP_PASSWORD;
-    const publicBaseUrl = process.env.FTP_PUBLIC_BASE_URL;
-    if (!host || !user || !password || !publicBaseUrl) {
+    const publicBaseUrl = resolvePublicBaseUrl();
+    if (!host || !user || !password) {
         throw new Error('FTP is not configured. Set FTP_HOST, FTP_USER, FTP_PASSWORD, and FTP_PUBLIC_BASE_URL.');
     }
     return {
@@ -56,21 +68,18 @@ function getFtpConfig() {
         port: parseInt(process.env.FTP_PORT || '21', 10),
         secure: process.env.FTP_SECURE === 'true',
         remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || exports.DEFAULT_FTP_REMOTE_PATH),
-        publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
+        publicBaseUrl,
     };
 }
 function getPublicUploadUrl(filename) {
-    const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
-    if (!base) {
-        throw new Error('FTP_PUBLIC_BASE_URL is not configured.');
-    }
-    return `${base}/${filename}`;
+    return `${resolvePublicBaseUrl()}/${filename}`;
 }
 const MEDIA_URL_REWRITE_RULES = [
     /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i,
     /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i,
     /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i,
-    /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/(.+)$/i,
+    /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/([^/]+)$/i,
+    /^https?:\/\/ahwuae\.com\/investoredu\/investoredu\/uploads\/([^/]+)$/i,
     /^https?:\/\/[^/]+\/uploads\/(.+)$/i,
 ];
 function extractFilenameFromUrlPath(urlPath) {
@@ -79,7 +88,7 @@ function extractFilenameFromUrlPath(urlPath) {
 function normalizeMediaUrl(oldUrl) {
     if (!oldUrl)
         return null;
-    const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+    const base = resolvePublicBaseUrl();
     if (!base)
         return oldUrl.trim();
     const normalized = oldUrl.trim();

@@ -10,6 +10,7 @@ export interface FtpConfig {
 export declare function isFtpConfigured(): boolean;
 export declare const DEFAULT_FTP_REMOTE_PATH = "/investoredu/investoredu/uploads";
 export declare const DEFAULT_FTP_PUBLIC_BASE_URL = "https://ahwuae.com/investoredu/investoredu/uploads";
+export declare function resolvePublicBaseUrl(): string;
 export declare function getFtpConfig(): FtpConfig;
 export declare function getPublicUploadUrl(filename: string): string;
 export declare function normalizeMediaUrl(oldUrl: string | null | undefined): string | null;

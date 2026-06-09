@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { isFtpConfigured, normalizeMediaUrl, uploadToFtp } from '../utils/ftp';
+import { isFtpConfigured, getPublicUploadUrl, normalizeMediaUrl, uploadToFtp } from '../utils/ftp';
 import { MediaUploadModel } from '../models/MediaUpload';
 
 const router = express.Router();
@@ -81,7 +81,7 @@ router.post('/', authenticate, (req: AuthRequest, res, next) => {
       storageType = 'local';
     }
 
-    const publicUrl = normalizeMediaUrl(fileUrl) || fileUrl;
+    const publicUrl = normalizeMediaUrl(getPublicUploadUrl(filename)) || getPublicUploadUrl(filename);
 
     const uploadId = await MediaUploadModel.create({
       filename,

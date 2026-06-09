@@ -26,6 +26,20 @@ export function isFtpConfigured(): boolean {
 export const DEFAULT_FTP_REMOTE_PATH = '/investoredu/investoredu/uploads';
 export const DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
 
+const WRONG_SINGLE_UPLOADS_BASE = /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/?$/i;
+
+/** Resolve the public uploads base, correcting legacy single-path Hostinger config. */
+export function resolvePublicBaseUrl(): string {
+  const envBase = (process.env.FTP_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+  if (!envBase) {
+    return DEFAULT_FTP_PUBLIC_BASE_URL;
+  }
+  if (WRONG_SINGLE_UPLOADS_BASE.test(envBase)) {
+    return DEFAULT_FTP_PUBLIC_BASE_URL;
+  }
+  return envBase;
+}
+
 const LEGACY_FTP_REMOTE_PATHS = [
   '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
   '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
@@ -49,9 +63,9 @@ export function getFtpConfig(): FtpConfig {
   const host = process.env.FTP_HOST;
   const user = process.env.FTP_USER;
   const password = process.env.FTP_PASSWORD;
-  const publicBaseUrl = process.env.FTP_PUBLIC_BASE_URL;
+  const publicBaseUrl = resolvePublicBaseUrl();
 
-  if (!host || !user || !password || !publicBaseUrl) {
+  if (!host || !user || !password) {
     throw new Error('FTP is not configured. Set FTP_HOST, FTP_USER, FTP_PASSWORD, and FTP_PUBLIC_BASE_URL.');
   }
 
@@ -62,23 +76,20 @@ export function getFtpConfig(): FtpConfig {
     port: parseInt(process.env.FTP_PORT || '21', 10),
     secure: process.env.FTP_SECURE === 'true',
     remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || DEFAULT_FTP_REMOTE_PATH),
-    publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
+    publicBaseUrl,
   };
 }
 
 export function getPublicUploadUrl(filename: string): string {
-  const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
-  if (!base) {
-    throw new Error('FTP_PUBLIC_BASE_URL is not configured.');
-  }
-  return `${base}/${filename}`;
+  return `${resolvePublicBaseUrl()}/${filename}`;
 }
 
 const MEDIA_URL_REWRITE_RULES: RegExp[] = [
   /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i,
   /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i,
   /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i,
-  /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/(.+)$/i,
+  /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/([^/]+)$/i,
+  /^https?:\/\/ahwuae\.com\/investoredu\/investoredu\/uploads\/([^/]+)$/i,
   /^https?:\/\/[^/]+\/uploads\/(.+)$/i,
 ];
 
@@ -90,7 +101,7 @@ function extractFilenameFromUrlPath(urlPath: string): string {
 export function normalizeMediaUrl(oldUrl: string | null | undefined): string | null {
   if (!oldUrl) return null;
 
-  const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  const base = resolvePublicBaseUrl();
   if (!base) return oldUrl.trim();
 
   const normalized = oldUrl.trim();
