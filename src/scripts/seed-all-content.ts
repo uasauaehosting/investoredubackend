@@ -180,6 +180,7 @@ async function seedSiteContent() {
     },
     glossary_meta: {
       pdfUrl: 'http://uasa.ae/en/galimg/06152019021545UASA Glossary_Final_03_10_2019.pdf',
+      backgroundImage: '/images/glossarybg.jpg',
     },
   };
 
