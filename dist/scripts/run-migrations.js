@@ -14,10 +14,15 @@ const MIGRATION_FILES = [
     'create_slides_table.sql',
 ];
 function splitStatements(sql) {
-    return sql
+    const withoutBlockComments = sql.replace(/\/\*[\s\S]*?\*\//g, '');
+    return withoutBlockComments
         .split(/;\s*\n/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0 && !s.startsWith('--') && !s.startsWith('USE '));
+        .map((s) => s
+        .split('\n')
+        .filter((line) => !line.trim().startsWith('--'))
+        .join('\n')
+        .trim())
+        .filter((s) => s.length > 0 && !/^USE\s/i.test(s));
 }
 async function runFile(filename) {
     const filePath = path_1.default.join(MIGRATIONS_DIR, filename);

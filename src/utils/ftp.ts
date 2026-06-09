@@ -1,4 +1,6 @@
 import { Client } from 'basic-ftp';
+import fs from 'fs';
+import os from 'os';
 import { Readable } from 'stream';
 import path from 'path';
 
@@ -42,6 +44,33 @@ export function getFtpConfig(): FtpConfig {
   };
 }
 
+export function getPublicUploadUrl(filename: string): string {
+  const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  if (!base) {
+    throw new Error('FTP_PUBLIC_BASE_URL is not configured.');
+  }
+  return `${base}/${filename}`;
+}
+
+const MIME_BY_EXT: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+};
+
+export function getMimeTypeForFilename(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  return MIME_BY_EXT[ext] || 'application/octet-stream';
+}
+
+export function isSafeUploadFilename(filename: string): boolean {
+  return /^[a-zA-Z0-9._-]+$/.test(filename) && !filename.includes('..');
+}
+
 export async function uploadToFtp(buffer: Buffer, filename: string): Promise<string> {
   const config = getFtpConfig();
   const client = new Client(30000);
@@ -61,7 +90,41 @@ export async function uploadToFtp(buffer: Buffer, filename: string): Promise<str
     const remoteFile = path.posix.join(remoteDir, filename);
     await client.uploadFrom(Readable.from(buffer), remoteFile);
 
-    return `${config.publicBaseUrl}/${filename}`;
+    return getPublicUploadUrl(filename);
+  } finally {
+    client.close();
+  }
+}
+
+export async function downloadFromFtp(filename: string): Promise<Buffer> {
+  if (!isSafeUploadFilename(filename)) {
+    throw new Error('Invalid filename');
+  }
+
+  const config = getFtpConfig();
+  const client = new Client(30000);
+
+  try {
+    await client.access({
+      host: config.host,
+      user: config.user,
+      password: config.password,
+      port: config.port,
+      secure: config.secure,
+    });
+
+    const remoteDir = config.remotePath.replace(/\\/g, '/');
+    const remoteFile = path.posix.join(remoteDir, filename);
+    const tmpPath = path.join(os.tmpdir(), `ftp-dl-${Date.now()}-${filename}`);
+
+    try {
+      await client.downloadTo(tmpPath, remoteFile);
+      return fs.readFileSync(tmpPath);
+    } finally {
+      if (fs.existsSync(tmpPath)) {
+        fs.unlinkSync(tmpPath);
+      }
+    }
   } finally {
     client.close();
   }

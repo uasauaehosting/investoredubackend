@@ -14,6 +14,7 @@ const REWRITE_RULES: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i, label: 'uasa.ae/galorg' },
   { pattern: /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i, label: 'uasa.ae/galimg' },
   { pattern: /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i, label: 'investoreducation.uasa.ae/uploads' },
+  { pattern: /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/(.+)$/i, label: 'ahwuae.com/investoredu/uploads' },
   { pattern: /^https?:\/\/[^/]+\/uploads\/(.+)$/i, label: 'legacy /uploads' },
 ];
 

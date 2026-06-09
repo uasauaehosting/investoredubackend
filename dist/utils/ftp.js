@@ -5,8 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isFtpConfigured = isFtpConfigured;
 exports.getFtpConfig = getFtpConfig;
+exports.getPublicUploadUrl = getPublicUploadUrl;
+exports.getMimeTypeForFilename = getMimeTypeForFilename;
+exports.isSafeUploadFilename = isSafeUploadFilename;
 exports.uploadToFtp = uploadToFtp;
+exports.downloadFromFtp = downloadFromFtp;
 const basic_ftp_1 = require("basic-ftp");
+const fs_1 = __importDefault(require("fs"));
+const os_1 = __importDefault(require("os"));
 const stream_1 = require("stream");
 const path_1 = __importDefault(require("path"));
 function isFtpConfigured() {
@@ -33,6 +39,29 @@ function getFtpConfig() {
         publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
     };
 }
+function getPublicUploadUrl(filename) {
+    const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+    if (!base) {
+        throw new Error('FTP_PUBLIC_BASE_URL is not configured.');
+    }
+    return `${base}/${filename}`;
+}
+const MIME_BY_EXT = {
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml',
+    '.pdf': 'application/pdf',
+};
+function getMimeTypeForFilename(filename) {
+    const ext = path_1.default.extname(filename).toLowerCase();
+    return MIME_BY_EXT[ext] || 'application/octet-stream';
+}
+function isSafeUploadFilename(filename) {
+    return /^[a-zA-Z0-9._-]+$/.test(filename) && !filename.includes('..');
+}
 async function uploadToFtp(buffer, filename) {
     const config = getFtpConfig();
     const client = new basic_ftp_1.Client(30000);
@@ -48,7 +77,38 @@ async function uploadToFtp(buffer, filename) {
         await client.ensureDir(remoteDir);
         const remoteFile = path_1.default.posix.join(remoteDir, filename);
         await client.uploadFrom(stream_1.Readable.from(buffer), remoteFile);
-        return `${config.publicBaseUrl}/${filename}`;
+        return getPublicUploadUrl(filename);
+    }
+    finally {
+        client.close();
+    }
+}
+async function downloadFromFtp(filename) {
+    if (!isSafeUploadFilename(filename)) {
+        throw new Error('Invalid filename');
+    }
+    const config = getFtpConfig();
+    const client = new basic_ftp_1.Client(30000);
+    try {
+        await client.access({
+            host: config.host,
+            user: config.user,
+            password: config.password,
+            port: config.port,
+            secure: config.secure,
+        });
+        const remoteDir = config.remotePath.replace(/\\/g, '/');
+        const remoteFile = path_1.default.posix.join(remoteDir, filename);
+        const tmpPath = path_1.default.join(os_1.default.tmpdir(), `ftp-dl-${Date.now()}-${filename}`);
+        try {
+            await client.downloadTo(tmpPath, remoteFile);
+            return fs_1.default.readFileSync(tmpPath);
+        }
+        finally {
+            if (fs_1.default.existsSync(tmpPath)) {
+                fs_1.default.unlinkSync(tmpPath);
+            }
+        }
     }
     finally {
         client.close();
