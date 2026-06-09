@@ -44,9 +44,12 @@ export interface IHomeStats {
 export interface ISlide {
   id?: number;
   title: string;
+  titleAr?: string;
   subtitle?: string;
+  subtitleAr?: string;
   image_url?: string;
   cta_text?: string;
+  cta_textAr?: string;
   cta_href?: string;
   display_order: number;
   is_active: boolean;
@@ -355,12 +358,12 @@ export class HomeStatsModel {
 // Slide Model
 export class SlideModel {
   static async create(slideData: Omit<ISlide, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, subtitle, image_url, cta_text, cta_href, display_order, is_active = true } = slideData;
+    const { title, titleAr, subtitle, subtitleAr, image_url, cta_text, cta_textAr, cta_href, display_order, is_active = true } = slideData;
     const query = `
-      INSERT INTO slides (title, subtitle, image_url, cta_text, cta_href, display_order, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO slides (title, title_ar, subtitle, subtitle_ar, image_url, cta_text, cta_text_ar, cta_href, display_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, subtitle, image_url, cta_text, cta_href, display_order, is_active]);
+    return await executeInsert(query, [title, titleAr ?? null, subtitle, subtitleAr ?? null, image_url, cta_text, cta_textAr ?? null, cta_href, display_order, is_active]);
   }
 
   static async findAll(): Promise<ISlide[]> {
@@ -369,9 +372,12 @@ export class SlideModel {
     return results.map(result => ({
       id: result.id,
       title: result.title,
+      titleAr: result.title_ar,
       subtitle: result.subtitle,
+      subtitleAr: result.subtitle_ar,
       image_url: result.image_url,
       cta_text: result.cta_text,
+      cta_textAr: result.cta_text_ar,
       cta_href: result.cta_href,
       display_order: result.display_order,
       is_active: result.is_active,
@@ -387,9 +393,12 @@ export class SlideModel {
       return {
         id: result.id,
         title: result.title,
+        titleAr: result.title_ar,
         subtitle: result.subtitle,
+        subtitleAr: result.subtitle_ar,
         image_url: result.image_url,
         cta_text: result.cta_text,
+        cta_textAr: result.cta_text_ar,
         cta_href: result.cta_href,
         display_order: result.display_order,
         is_active: result.is_active,
@@ -401,7 +410,7 @@ export class SlideModel {
   }
 
   static async update(id: number, updateData: Partial<ISlide>): Promise<boolean> {
-    const { title, subtitle, image_url, cta_text, cta_href, display_order, is_active } = updateData;
+    const { title, titleAr, subtitle, subtitleAr, image_url, cta_text, cta_textAr, cta_href, display_order, is_active } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -409,9 +418,17 @@ export class SlideModel {
       updateFields.push('title = ?');
       updateValues.push(title);
     }
+    if (titleAr !== undefined) {
+      updateFields.push('title_ar = ?');
+      updateValues.push(titleAr);
+    }
     if (subtitle !== undefined) {
       updateFields.push('subtitle = ?');
       updateValues.push(subtitle);
+    }
+    if (subtitleAr !== undefined) {
+      updateFields.push('subtitle_ar = ?');
+      updateValues.push(subtitleAr);
     }
     if (image_url !== undefined) {
       updateFields.push('image_url = ?');
@@ -420,6 +437,10 @@ export class SlideModel {
     if (cta_text !== undefined) {
       updateFields.push('cta_text = ?');
       updateValues.push(cta_text);
+    }
+    if (cta_textAr !== undefined) {
+      updateFields.push('cta_text_ar = ?');
+      updateValues.push(cta_textAr);
     }
     if (cta_href !== undefined) {
       updateFields.push('cta_href = ?');

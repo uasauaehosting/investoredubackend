@@ -3,12 +3,19 @@ import { executeQuery, executeSingleQuery, executeInsert, executeUpdate } from '
 export interface Programs {
   id: number;
   member_name: string;
+  member_name_ar?: string | null;
   general_info: string | null;
+  general_info_ar?: string | null;
   education_materials: string | null;
+  education_materials_ar?: string | null;
   specific_materials: string | null;
+  specific_materials_ar?: string | null;
   assisting_groups: string | null;
+  assisting_groups_ar?: string | null;
   evaluation: string | null;
+  evaluation_ar?: string | null;
   successful_programs: string | null;
+  successful_programs_ar?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -16,12 +23,19 @@ export interface Programs {
 
 export interface CreateProgramsData {
   member_name: string;
+  member_name_ar?: string | null;
   general_info?: string[] | null;
+  general_info_ar?: string[] | null;
   education_materials?: string[] | null;
+  education_materials_ar?: string[] | null;
   specific_materials?: string[] | null;
+  specific_materials_ar?: string[] | null;
   assisting_groups?: string[] | null;
+  assisting_groups_ar?: string[] | null;
   evaluation?: string[] | null;
+  evaluation_ar?: string[] | null;
   successful_programs?: string[] | null;
+  successful_programs_ar?: string[] | null;
   is_active?: boolean;
 }
 
@@ -59,19 +73,27 @@ export class ProgramsModel {
   static async create(data: CreateProgramsData): Promise<Programs> {
     const query = `
       INSERT INTO programs (
-        member_name, general_info, education_materials, specific_materials, 
-        assisting_groups, evaluation, successful_programs, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        member_name, member_name_ar, general_info, general_info_ar, education_materials, education_materials_ar,
+        specific_materials, specific_materials_ar, assisting_groups, assisting_groups_ar,
+        evaluation, evaluation_ar, successful_programs, successful_programs_ar, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     const params = [
       data.member_name,
+      data.member_name_ar ?? null,
       JSON.stringify(data.general_info || []),
+      JSON.stringify(data.general_info_ar || []),
       JSON.stringify(data.education_materials || []),
+      JSON.stringify(data.education_materials_ar || []),
       JSON.stringify(data.specific_materials || []),
+      JSON.stringify(data.specific_materials_ar || []),
       JSON.stringify(data.assisting_groups || []),
+      JSON.stringify(data.assisting_groups_ar || []),
       JSON.stringify(data.evaluation || []),
+      JSON.stringify(data.evaluation_ar || []),
       JSON.stringify(data.successful_programs || []),
+      JSON.stringify(data.successful_programs_ar || []),
       data.is_active !== undefined ? data.is_active : true
     ];
 
@@ -88,29 +110,57 @@ export class ProgramsModel {
       fields.push('member_name = ?');
       params.push(data.member_name);
     }
+    if (data.member_name_ar !== undefined) {
+      fields.push('member_name_ar = ?');
+      params.push(data.member_name_ar);
+    }
     if (data.general_info !== undefined) {
       fields.push('general_info = ?');
       params.push(JSON.stringify(data.general_info));
+    }
+    if (data.general_info_ar !== undefined) {
+      fields.push('general_info_ar = ?');
+      params.push(JSON.stringify(data.general_info_ar));
     }
     if (data.education_materials !== undefined) {
       fields.push('education_materials = ?');
       params.push(JSON.stringify(data.education_materials));
     }
+    if (data.education_materials_ar !== undefined) {
+      fields.push('education_materials_ar = ?');
+      params.push(JSON.stringify(data.education_materials_ar));
+    }
     if (data.specific_materials !== undefined) {
       fields.push('specific_materials = ?');
       params.push(JSON.stringify(data.specific_materials));
+    }
+    if (data.specific_materials_ar !== undefined) {
+      fields.push('specific_materials_ar = ?');
+      params.push(JSON.stringify(data.specific_materials_ar));
     }
     if (data.assisting_groups !== undefined) {
       fields.push('assisting_groups = ?');
       params.push(JSON.stringify(data.assisting_groups));
     }
+    if (data.assisting_groups_ar !== undefined) {
+      fields.push('assisting_groups_ar = ?');
+      params.push(JSON.stringify(data.assisting_groups_ar));
+    }
     if (data.evaluation !== undefined) {
       fields.push('evaluation = ?');
       params.push(JSON.stringify(data.evaluation));
     }
+    if (data.evaluation_ar !== undefined) {
+      fields.push('evaluation_ar = ?');
+      params.push(JSON.stringify(data.evaluation_ar));
+    }
     if (data.successful_programs !== undefined) {
       fields.push('successful_programs = ?');
       params.push(JSON.stringify(data.successful_programs));
+    }
+    if (data.successful_programs_ar !== undefined) {
+      fields.push('successful_programs_ar = ?');
+      params.push(JSON.stringify(data.successful_programs_ar));
     }
     if (data.is_active !== undefined) {
       fields.push('is_active = ?');

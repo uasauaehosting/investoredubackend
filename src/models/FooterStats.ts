@@ -3,6 +3,7 @@ import { executeQuery, executeInsert, executeUpdate } from '../utils/database';
 export interface IFooterStat {
   id?: number;
   label: string;
+  labelAr?: string;
   value: string;
   displayOrder: number;
   isActive: boolean;
@@ -12,6 +13,7 @@ function mapRow(row: any): IFooterStat {
   return {
     id: row.id,
     label: row.label,
+    labelAr: row.label_ar,
     value: row.value,
     displayOrder: row.display_order,
     isActive: row.is_active,
@@ -30,8 +32,8 @@ export class FooterStatsModel {
     await executeUpdate('UPDATE footer_stats SET is_active = false', []);
     for (const stat of stats) {
       await executeInsert(
-        'INSERT INTO footer_stats (label, value, display_order, is_active) VALUES (?, ?, ?, ?)',
-        [stat.label, stat.value, stat.displayOrder, true],
+        'INSERT INTO footer_stats (label, label_ar, value, display_order, is_active) VALUES (?, ?, ?, ?, ?)',
+        [stat.label, stat.labelAr ?? null, stat.value, stat.displayOrder, true],
       );
     }
   }
@@ -40,6 +42,7 @@ export class FooterStatsModel {
     const fields: string[] = [];
     const values: any[] = [];
     if (data.label !== undefined) { fields.push('label = ?'); values.push(data.label); }
+    if (data.labelAr !== undefined) { fields.push('label_ar = ?'); values.push(data.labelAr); }
     if (data.value !== undefined) { fields.push('value = ?'); values.push(data.value); }
     if (data.displayOrder !== undefined) { fields.push('display_order = ?'); values.push(data.displayOrder); }
     if (data.isActive !== undefined) { fields.push('is_active = ?'); values.push(data.isActive); }

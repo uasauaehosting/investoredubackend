@@ -62,12 +62,15 @@ export interface IFramework {
 export interface IPrinciple {
   id?: number;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   author: string;
   date: Date;
   fileUrl: string;
   imageUrl: string;
   content?: string;
+  contentAr?: string;
   authorityId?: number;
   categoryId?: number;
   views: number;
@@ -80,12 +83,15 @@ export interface IPrinciple {
 export interface IInvestmentProduct {
   id?: number;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   author: string;
   date: Date;
   fileUrl: string;
   imageUrl: string;
   content?: string;
+  contentAr?: string;
   slug?: string;
   authorityId?: number;
   categoryId?: number;
@@ -115,7 +121,9 @@ export type StrategyProjectType = 'Strategy' | 'Report';
 export interface IMemberStrategyProject {
   id?: number;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   authority_name: string;
   memberId?: number | null;
   type: StrategyProjectType | string;
@@ -664,12 +672,12 @@ export class FrameworkModel {
 // Principle Model
 export class PrincipleModel {
   static async create(principleData: Omit<IPrinciple, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = principleData;
+    const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = principleData;
     const query = `
-      INSERT INTO principles (title, description, author, date, file_url, image_url, content, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO principles (title, title_ar, description, description_ar, author, date, file_url, image_url, content, content_ar, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, authorityId, categoryId, views, downloads, isActive]);
   }
 
   static async findAll(): Promise<IPrinciple[]> {
@@ -688,12 +696,15 @@ export class PrincipleModel {
     return {
       id: result.id,
       title: result.title,
+      titleAr: result.title_ar,
       description: result.description,
+      descriptionAr: result.description_ar,
       author: result.author,
       date: result.date,
       fileUrl: result.file_url,
       imageUrl: result.image_url,
       content: result.content,
+      contentAr: result.content_ar,
       authorityId: result.authority_id,
       categoryId: result.category_id,
       views: result.views,
@@ -711,7 +722,7 @@ export class PrincipleModel {
   }
 
   static async update(id: number, updateData: Partial<IPrinciple>): Promise<boolean> {
-    const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;
+    const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -719,9 +730,17 @@ export class PrincipleModel {
       updateFields.push('title = ?');
       updateValues.push(title);
     }
+    if (titleAr !== undefined) {
+      updateFields.push('title_ar = ?');
+      updateValues.push(titleAr);
+    }
     if (description !== undefined) {
       updateFields.push('description = ?');
       updateValues.push(description);
+    }
+    if (descriptionAr !== undefined) {
+      updateFields.push('description_ar = ?');
+      updateValues.push(descriptionAr);
     }
     if (author !== undefined) {
       updateFields.push('author = ?');
@@ -742,6 +761,10 @@ export class PrincipleModel {
     if (content !== undefined) {
       updateFields.push('content = ?');
       updateValues.push(content);
+    }
+    if (contentAr !== undefined) {
+      updateFields.push('content_ar = ?');
+      updateValues.push(contentAr);
     }
     if (authorityId !== undefined) {
       updateFields.push('authority_id = ?');
@@ -785,12 +808,15 @@ function mapInvestmentProductRow(result: any): IInvestmentProduct {
   return {
     id: result.id,
     title: result.title,
+    titleAr: result.title_ar,
     description: result.description,
+    descriptionAr: result.description_ar,
     author: result.author,
     date: result.date,
     fileUrl: result.file_url,
     imageUrl: result.image_url,
     content: result.content,
+    contentAr: result.content_ar,
     slug: result.slug ?? undefined,
     authorityId: result.authority_id,
     categoryId: result.category_id,
@@ -805,12 +831,12 @@ function mapInvestmentProductRow(result: any): IInvestmentProduct {
 // Investment Product Model
 export class InvestmentProductModel {
   static async create(productData: Omit<IInvestmentProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = productData;
+    const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, slug, authorityId, categoryId, views, downloads, isActive } = productData;
     const query = `
-      INSERT INTO investment_products (title, description, author, date, file_url, image_url, content, slug, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO investment_products (title, title_ar, description, description_ar, author, date, file_url, image_url, content, content_ar, slug, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, description, author, date, fileUrl, imageUrl, content, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
   }
 
   static async findAll(): Promise<IInvestmentProduct[]> {
@@ -841,7 +867,7 @@ export class InvestmentProductModel {
   }
 
   static async update(id: number, updateData: Partial<IInvestmentProduct>): Promise<boolean> {
-    const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = updateData;
+    const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, slug, authorityId, categoryId, views, downloads, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -849,9 +875,17 @@ export class InvestmentProductModel {
       updateFields.push('title = ?');
       updateValues.push(title);
     }
+    if (titleAr !== undefined) {
+      updateFields.push('title_ar = ?');
+      updateValues.push(titleAr);
+    }
     if (description !== undefined) {
       updateFields.push('description = ?');
       updateValues.push(description);
+    }
+    if (descriptionAr !== undefined) {
+      updateFields.push('description_ar = ?');
+      updateValues.push(descriptionAr);
     }
     if (author !== undefined) {
       updateFields.push('author = ?');
@@ -872,6 +906,10 @@ export class InvestmentProductModel {
     if (content !== undefined) {
       updateFields.push('content = ?');
       updateValues.push(content);
+    }
+    if (contentAr !== undefined) {
+      updateFields.push('content_ar = ?');
+      updateValues.push(contentAr);
     }
     if (slug !== undefined) {
       updateFields.push('slug = ?');
@@ -1045,7 +1083,9 @@ export class MemberStrategyProjectModel {
     return {
       id: result.id as number,
       title: String(result.title ?? ''),
+      titleAr: result.title_ar ? String(result.title_ar) : undefined,
       description: String(result.description ?? ''),
+      descriptionAr: result.description_ar ? String(result.description_ar) : undefined,
       authority_name: authorityName,
       memberId: (result.member_id as number | null) ?? null,
       type: String(result.type ?? ''),
@@ -1065,18 +1105,20 @@ export class MemberStrategyProjectModel {
 
   static async create(projectData: {
     title: string;
+    titleAr?: string;
     description: string;
+    descriptionAr?: string;
     authority_name: string;
     type: StrategyProjectType | string;
     file_url?: string | null;
     isActive?: boolean;
   }): Promise<number> {
-    const { title, description, authority_name, type, file_url, isActive = true } = projectData;
+    const { title, titleAr, description, descriptionAr, authority_name, type, file_url, isActive = true } = projectData;
     const query = `
-      INSERT INTO member_strategies_projects (title, description, authority_name, type, status, file_url, is_active)
-      VALUES (?, ?, ?, ?, 'Active', ?, ?)
+      INSERT INTO member_strategies_projects (title, title_ar, description, description_ar, authority_name, type, status, file_url, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?)
     `;
-    return await executeInsert(query, [title, description, authority_name, type, file_url ?? null, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, description, descriptionAr ?? null, authority_name, type, file_url ?? null, isActive]);
   }
 
   static async findAll(options: { includeInactive?: boolean } = {}): Promise<IMemberStrategyProject[]> {
@@ -1112,9 +1154,17 @@ export class MemberStrategyProjectModel {
       fields.push('title = ?');
       values.push(updateData.title);
     }
+    if (updateData.titleAr !== undefined) {
+      fields.push('title_ar = ?');
+      values.push(updateData.titleAr);
+    }
     if (updateData.description !== undefined) {
       fields.push('description = ?');
       values.push(updateData.description);
+    }
+    if (updateData.descriptionAr !== undefined) {
+      fields.push('description_ar = ?');
+      values.push(updateData.descriptionAr);
     }
     if (updateData.authority_name !== undefined) {
       fields.push('authority_name = ?');

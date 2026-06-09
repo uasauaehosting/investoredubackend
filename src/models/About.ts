@@ -3,7 +3,9 @@ import { executeQuery, executeSingleQuery, executeInsert, executeUpdate } from '
 export interface IAboutSection {
   id?: number;
   title: string;
+  titleAr?: string;
   content: string;
+  contentAr?: string;
   order: number;
   isActive: boolean;
   createdAt?: Date;
@@ -24,12 +26,12 @@ export interface IContactInfo {
 // About Section Model
 export class AboutSectionModel {
   static async create(sectionData: Omit<IAboutSection, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, content, order, isActive } = sectionData;
+    const { title, titleAr, content, contentAr, order, isActive } = sectionData;
     const query = `
-      INSERT INTO about_sections (title, content, \`order\`, is_active)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO about_sections (title, title_ar, content, content_ar, \`order\`, is_active)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, content, order, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, content, contentAr ?? null, order, isActive]);
   }
 
   static async findAll(): Promise<IAboutSection[]> {
@@ -38,7 +40,9 @@ export class AboutSectionModel {
     return results.map(result => ({
       id: result.id,
       title: result.title,
+      titleAr: result.title_ar,
       content: result.content,
+      contentAr: result.content_ar,
       order: result.order,
       isActive: result.is_active,
       createdAt: result.created_at,
@@ -53,7 +57,9 @@ export class AboutSectionModel {
       return {
         id: result.id,
         title: result.title,
+        titleAr: result.title_ar,
         content: result.content,
+        contentAr: result.content_ar,
         order: result.order,
         isActive: result.is_active,
         createdAt: result.created_at,
@@ -64,7 +70,7 @@ export class AboutSectionModel {
   }
 
   static async update(id: number, updateData: Partial<IAboutSection>): Promise<boolean> {
-    const { title, content, order, isActive } = updateData;
+    const { title, titleAr, content, contentAr, order, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -72,9 +78,17 @@ export class AboutSectionModel {
       updateFields.push('title = ?');
       updateValues.push(title);
     }
+    if (titleAr !== undefined) {
+      updateFields.push('title_ar = ?');
+      updateValues.push(titleAr);
+    }
     if (content !== undefined) {
       updateFields.push('content = ?');
       updateValues.push(content);
+    }
+    if (contentAr !== undefined) {
+      updateFields.push('content_ar = ?');
+      updateValues.push(contentAr);
     }
     if (order !== undefined) {
       updateFields.push('`order` = ?');

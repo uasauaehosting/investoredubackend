@@ -3,8 +3,10 @@ import { executeQuery, executeSingleQuery, executeInsert, executeUpdate } from '
 export interface IBenchmarkingRecord {
   id?: number;
   authorityName: string;
+  authorityNameAr?: string;
   year: string;
   indicator: string | null;
+  indicatorAr?: string | null;
   value: string | null;
   data: Record<string, unknown> | null;
   isActive: boolean;
@@ -19,8 +21,10 @@ function mapRow(row: any): IBenchmarkingRecord {
   return {
     id: row.id,
     authorityName: row.authority_name,
+    authorityNameAr: row.authority_name_ar,
     year: row.year,
     indicator: row.indicator,
+    indicatorAr: row.indicator_ar,
     value: row.value,
     data,
     isActive: row.is_active,
@@ -32,11 +36,11 @@ function mapRow(row: any): IBenchmarkingRecord {
 export class BenchmarkingModel {
   static async create(data: Omit<IBenchmarkingRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
     const query = `
-      INSERT INTO benchmarking_records (authority_name, year, indicator, value, data, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO benchmarking_records (authority_name, authority_name_ar, year, indicator, indicator_ar, value, data, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     return executeInsert(query, [
-      data.authorityName, data.year, data.indicator, data.value,
+      data.authorityName, data.authorityNameAr ?? null, data.year, data.indicator, data.indicatorAr ?? null, data.value,
       data.data ? JSON.stringify(data.data) : null,
       data.isActive !== false,
     ]);
@@ -74,8 +78,10 @@ export class BenchmarkingModel {
     const values: any[] = [];
 
     if (data.authorityName !== undefined) { fields.push('authority_name = ?'); values.push(data.authorityName); }
+    if (data.authorityNameAr !== undefined) { fields.push('authority_name_ar = ?'); values.push(data.authorityNameAr); }
     if (data.year !== undefined) { fields.push('year = ?'); values.push(data.year); }
     if (data.indicator !== undefined) { fields.push('indicator = ?'); values.push(data.indicator); }
+    if (data.indicatorAr !== undefined) { fields.push('indicator_ar = ?'); values.push(data.indicatorAr); }
     if (data.value !== undefined) { fields.push('value = ?'); values.push(data.value); }
     if (data.data !== undefined) { fields.push('data = ?'); values.push(data.data ? JSON.stringify(data.data) : null); }
     if (data.isActive !== undefined) { fields.push('is_active = ?'); values.push(data.isActive); }
