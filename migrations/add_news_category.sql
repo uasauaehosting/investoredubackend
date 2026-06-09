@@ -1,0 +1,1 @@
+ALTER TABLE news ADD COLUMN category VARCHAR(50) DEFAULT 'News';
