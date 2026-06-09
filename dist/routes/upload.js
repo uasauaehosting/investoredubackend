@@ -59,21 +59,21 @@ router.post('/', auth_1.authenticate, (req, res, next) => {
         const filename = (0, ftp_1.isFtpConfigured)()
             ? buildFilename(req.file.originalname)
             : req.file.filename;
-        let fileUrl;
+        let publicUrl;
         let storageType;
         if ((0, ftp_1.isFtpConfigured)()) {
             const buffer = req.file.buffer;
             if (!buffer) {
                 return res.status(500).json({ message: 'File buffer missing for FTP upload' });
             }
-            fileUrl = await (0, ftp_1.uploadToFtp)(buffer, filename);
+            publicUrl = await (0, ftp_1.uploadMediaFile)(buffer, filename);
             storageType = 'ftp';
         }
         else {
-            fileUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+            publicUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
             storageType = 'local';
         }
-        const publicUrl = (0, ftp_1.normalizeMediaUrl)((0, ftp_1.getPublicUploadUrl)(filename)) || (0, ftp_1.getPublicUploadUrl)(filename);
+        publicUrl = (0, ftp_1.normalizeMediaUrl)(publicUrl) || publicUrl;
         const uploadId = await MediaUpload_1.MediaUploadModel.create({
             filename,
             originalName: req.file.originalname,

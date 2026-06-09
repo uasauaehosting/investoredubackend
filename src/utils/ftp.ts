@@ -1,4 +1,5 @@
 import { Client } from 'basic-ftp';
+import axios from 'axios';
 import fs from 'fs';
 import os from 'os';
 import { Readable } from 'stream';
@@ -26,7 +27,20 @@ export function isFtpConfigured(): boolean {
 export const DEFAULT_FTP_REMOTE_PATH = '/investoredu/uploads';
 export const DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
 
+const WRONG_FTP_REMOTE_PATHS = new Set([
+  '/investoredu/investoredu/uploads',
+  'investoredu/investoredu/uploads',
+]);
+
 const WRONG_SINGLE_UPLOADS_BASE = /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/?$/i;
+
+function resolveRemotePath(): string {
+  const configured = normalizeRemotePath(process.env.FTP_REMOTE_PATH || DEFAULT_FTP_REMOTE_PATH);
+  if (WRONG_FTP_REMOTE_PATHS.has(configured)) {
+    return DEFAULT_FTP_REMOTE_PATH;
+  }
+  return configured;
+}
 
 /** Resolve the public uploads base, correcting legacy single-path Hostinger config. */
 export function resolvePublicBaseUrl(): string {
@@ -75,9 +89,43 @@ export function getFtpConfig(): FtpConfig {
     password,
     port: parseInt(process.env.FTP_PORT || '21', 10),
     secure: process.env.FTP_SECURE === 'true',
-    remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || DEFAULT_FTP_REMOTE_PATH),
+    remotePath: resolveRemotePath(),
     publicBaseUrl,
   };
+}
+
+function getDirectUploadPath(): string | null {
+  const configured = process.env.UPLOAD_DIRECT_PATH?.trim();
+  if (!configured) return null;
+  return path.resolve(configured);
+}
+
+/** Verify the uploaded file is reachable at its public URL (Hostinger CDN). */
+export async function verifyPublicUploadReachable(filename: string): Promise<boolean> {
+  const url = getPublicUploadUrl(filename);
+  const attempts = [0, 1500, 3000];
+
+  for (const delayMs of attempts) {
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    try {
+      const response = await axios.get(url, {
+        timeout: 15000,
+        validateStatus: () => true,
+        responseType: 'arraybuffer',
+      });
+
+      if (response.status >= 200 && response.status < 400 && (response.data?.byteLength ?? 0) > 0) {
+        return true;
+      }
+    } catch {
+      // retry
+    }
+  }
+
+  return false;
 }
 
 export function getPublicUploadUrl(filename: string): string {
@@ -157,14 +205,38 @@ export async function uploadToFtp(buffer: Buffer, filename: string): Promise<str
     await client.uploadFrom(Readable.from(buffer), remoteFile);
 
     const uploadedSize = await client.size(remoteFile).catch(() => -1);
-    if (uploadedSize <= 0) {
-      throw new Error(`FTP upload verification failed for ${remoteFile}`);
+    if (uploadedSize !== buffer.length) {
+      throw new Error(
+        `FTP upload size mismatch for ${remoteFile} (expected ${buffer.length}, got ${uploadedSize})`
+      );
     }
 
     return getPublicUploadUrl(filename);
   } finally {
     client.close();
   }
+}
+
+/** Upload via direct filesystem (Hostinger colocated API) or FTP, then verify public URL. */
+export async function uploadMediaFile(buffer: Buffer, filename: string): Promise<string> {
+  const directPath = getDirectUploadPath();
+  if (directPath) {
+    fs.mkdirSync(directPath, { recursive: true });
+    fs.writeFileSync(path.join(directPath, filename), buffer);
+  } else {
+    await uploadToFtp(buffer, filename);
+  }
+
+  const publicUrl = getPublicUploadUrl(filename);
+  const reachable = await verifyPublicUploadReachable(filename);
+  if (!reachable) {
+    throw new Error(
+      `Upload saved but file is not reachable at ${publicUrl}. ` +
+        `Use FTP_REMOTE_PATH=${DEFAULT_FTP_REMOTE_PATH} or set UPLOAD_DIRECT_PATH on the server.`
+    );
+  }
+
+  return publicUrl;
 }
 
 export async function downloadFromFtp(filename: string): Promise<Buffer> {

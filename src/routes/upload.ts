@@ -3,7 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { authenticate, AuthRequest } from '../middleware/auth';
-import { isFtpConfigured, getPublicUploadUrl, normalizeMediaUrl, uploadToFtp } from '../utils/ftp';
+import { isFtpConfigured, normalizeMediaUrl, uploadMediaFile } from '../utils/ftp';
 import { MediaUploadModel } from '../models/MediaUpload';
 
 const router = express.Router();
@@ -65,7 +65,7 @@ router.post('/', authenticate, (req: AuthRequest, res, next) => {
       ? buildFilename(req.file.originalname)
       : req.file.filename;
 
-    let fileUrl: string;
+    let publicUrl: string;
     let storageType: 'ftp' | 'local';
 
     if (isFtpConfigured()) {
@@ -74,14 +74,14 @@ router.post('/', authenticate, (req: AuthRequest, res, next) => {
         return res.status(500).json({ message: 'File buffer missing for FTP upload' });
       }
 
-      fileUrl = await uploadToFtp(buffer, filename);
+      publicUrl = await uploadMediaFile(buffer, filename);
       storageType = 'ftp';
     } else {
-      fileUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+      publicUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
       storageType = 'local';
     }
 
-    const publicUrl = normalizeMediaUrl(getPublicUploadUrl(filename)) || getPublicUploadUrl(filename);
+    publicUrl = normalizeMediaUrl(publicUrl) || publicUrl;
 
     const uploadId = await MediaUploadModel.create({
       filename,

@@ -7,13 +7,16 @@ exports.DEFAULT_FTP_PUBLIC_BASE_URL = exports.DEFAULT_FTP_REMOTE_PATH = void 0;
 exports.isFtpConfigured = isFtpConfigured;
 exports.resolvePublicBaseUrl = resolvePublicBaseUrl;
 exports.getFtpConfig = getFtpConfig;
+exports.verifyPublicUploadReachable = verifyPublicUploadReachable;
 exports.getPublicUploadUrl = getPublicUploadUrl;
 exports.normalizeMediaUrl = normalizeMediaUrl;
 exports.getMimeTypeForFilename = getMimeTypeForFilename;
 exports.isSafeUploadFilename = isSafeUploadFilename;
 exports.uploadToFtp = uploadToFtp;
+exports.uploadMediaFile = uploadMediaFile;
 exports.downloadFromFtp = downloadFromFtp;
 const basic_ftp_1 = require("basic-ftp");
+const axios_1 = __importDefault(require("axios"));
 const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
 const stream_1 = require("stream");
@@ -26,7 +29,18 @@ function isFtpConfigured() {
 }
 exports.DEFAULT_FTP_REMOTE_PATH = '/investoredu/uploads';
 exports.DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
+const WRONG_FTP_REMOTE_PATHS = new Set([
+    '/investoredu/investoredu/uploads',
+    'investoredu/investoredu/uploads',
+]);
 const WRONG_SINGLE_UPLOADS_BASE = /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/?$/i;
+function resolveRemotePath() {
+    const configured = normalizeRemotePath(process.env.FTP_REMOTE_PATH || exports.DEFAULT_FTP_REMOTE_PATH);
+    if (WRONG_FTP_REMOTE_PATHS.has(configured)) {
+        return exports.DEFAULT_FTP_REMOTE_PATH;
+    }
+    return configured;
+}
 function resolvePublicBaseUrl() {
     const envBase = (process.env.FTP_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
     if (!envBase) {
@@ -67,9 +81,37 @@ function getFtpConfig() {
         password,
         port: parseInt(process.env.FTP_PORT || '21', 10),
         secure: process.env.FTP_SECURE === 'true',
-        remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || exports.DEFAULT_FTP_REMOTE_PATH),
+        remotePath: resolveRemotePath(),
         publicBaseUrl,
     };
+}
+function getDirectUploadPath() {
+    const configured = process.env.UPLOAD_DIRECT_PATH?.trim();
+    if (!configured)
+        return null;
+    return path_1.default.resolve(configured);
+}
+async function verifyPublicUploadReachable(filename) {
+    const url = getPublicUploadUrl(filename);
+    const attempts = [0, 1500, 3000];
+    for (const delayMs of attempts) {
+        if (delayMs > 0) {
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+        }
+        try {
+            const response = await axios_1.default.get(url, {
+                timeout: 15000,
+                validateStatus: () => true,
+                responseType: 'arraybuffer',
+            });
+            if (response.status >= 200 && response.status < 400 && (response.data?.byteLength ?? 0) > 0) {
+                return true;
+            }
+        }
+        catch {
+        }
+    }
+    return false;
 }
 function getPublicUploadUrl(filename) {
     return `${resolvePublicBaseUrl()}/${filename}`;
@@ -135,14 +177,31 @@ async function uploadToFtp(buffer, filename) {
         const remoteFile = path_1.default.posix.join(remoteDir, filename);
         await client.uploadFrom(stream_1.Readable.from(buffer), remoteFile);
         const uploadedSize = await client.size(remoteFile).catch(() => -1);
-        if (uploadedSize <= 0) {
-            throw new Error(`FTP upload verification failed for ${remoteFile}`);
+        if (uploadedSize !== buffer.length) {
+            throw new Error(`FTP upload size mismatch for ${remoteFile} (expected ${buffer.length}, got ${uploadedSize})`);
         }
         return getPublicUploadUrl(filename);
     }
     finally {
         client.close();
     }
+}
+async function uploadMediaFile(buffer, filename) {
+    const directPath = getDirectUploadPath();
+    if (directPath) {
+        fs_1.default.mkdirSync(directPath, { recursive: true });
+        fs_1.default.writeFileSync(path_1.default.join(directPath, filename), buffer);
+    }
+    else {
+        await uploadToFtp(buffer, filename);
+    }
+    const publicUrl = getPublicUploadUrl(filename);
+    const reachable = await verifyPublicUploadReachable(filename);
+    if (!reachable) {
+        throw new Error(`Upload saved but file is not reachable at ${publicUrl}. ` +
+            `Use FTP_REMOTE_PATH=${exports.DEFAULT_FTP_REMOTE_PATH} or set UPLOAD_DIRECT_PATH on the server.`);
+    }
+    return publicUrl;
 }
 async function downloadFromFtp(filename) {
     if (!isSafeUploadFilename(filename)) {
