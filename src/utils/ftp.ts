@@ -23,7 +23,7 @@ export function isFtpConfigured(): boolean {
   );
 }
 
-export const DEFAULT_FTP_REMOTE_PATH = '/investoredu/investoredu/uploads';
+export const DEFAULT_FTP_REMOTE_PATH = '/investoredu/uploads';
 export const DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
 
 const WRONG_SINGLE_UPLOADS_BASE = /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/?$/i;
@@ -41,9 +41,9 @@ export function resolvePublicBaseUrl(): string {
 }
 
 const LEGACY_FTP_REMOTE_PATHS = [
+  '/investoredu/investoredu/uploads',
   '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
   '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
-  '/investoredu/uploads',
 ];
 
 function normalizeRemotePath(remotePath: string): string {
@@ -153,7 +153,13 @@ export async function uploadToFtp(buffer: Buffer, filename: string): Promise<str
 
     const remoteDir = normalizeRemotePath(config.remotePath);
     await client.ensureDir(remoteDir);
-    await client.uploadFrom(Readable.from(buffer), path.posix.join(remoteDir, filename));
+    const remoteFile = path.posix.join(remoteDir, filename);
+    await client.uploadFrom(Readable.from(buffer), remoteFile);
+
+    const uploadedSize = await client.size(remoteFile).catch(() => -1);
+    if (uploadedSize <= 0) {
+      throw new Error(`FTP upload verification failed for ${remoteFile}`);
+    }
 
     return getPublicUploadUrl(filename);
   } finally {
