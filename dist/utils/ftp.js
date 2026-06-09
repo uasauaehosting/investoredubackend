@@ -27,13 +27,18 @@ function isFtpConfigured() {
         process.env.FTP_PASSWORD &&
         process.env.FTP_PUBLIC_BASE_URL);
 }
-exports.DEFAULT_FTP_REMOTE_PATH = '/investoredu/uploads';
-exports.DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
+exports.DEFAULT_FTP_REMOTE_PATH = '/investorupload';
+exports.DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investorupload/uploads';
 const WRONG_FTP_REMOTE_PATHS = new Set([
     '/investoredu/investoredu/uploads',
     'investoredu/investoredu/uploads',
+    '/investoredu/uploads',
+    'investoredu/uploads',
 ]);
-const WRONG_SINGLE_UPLOADS_BASE = /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/?$/i;
+const LEGACY_PUBLIC_BASE_URLS = [
+    'https://ahwuae.com/investoredu/uploads',
+    'https://ahwuae.com/investoredu/investoredu/uploads',
+];
 function resolveRemotePath() {
     const configured = normalizeRemotePath(process.env.FTP_REMOTE_PATH || exports.DEFAULT_FTP_REMOTE_PATH);
     if (WRONG_FTP_REMOTE_PATHS.has(configured)) {
@@ -43,18 +48,17 @@ function resolveRemotePath() {
 }
 function resolvePublicBaseUrl() {
     const envBase = (process.env.FTP_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
-    if (!envBase) {
-        return exports.DEFAULT_FTP_PUBLIC_BASE_URL;
-    }
-    if (WRONG_SINGLE_UPLOADS_BASE.test(envBase)) {
+    if (!envBase || LEGACY_PUBLIC_BASE_URLS.includes(envBase)) {
         return exports.DEFAULT_FTP_PUBLIC_BASE_URL;
     }
     return envBase;
 }
 const LEGACY_FTP_REMOTE_PATHS = [
     '/investoredu/investoredu/uploads',
+    '/investoredu/uploads',
     '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
     '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
+    '/home/u827794112/domains/ahwuae.com/public_html/investorupload/uploads',
 ];
 function normalizeRemotePath(remotePath) {
     return remotePath.replace(/\\/g, '/');
@@ -88,6 +92,8 @@ function getFtpConfig() {
 function getDirectUploadCandidates() {
     const candidates = [
         process.env.UPLOAD_DIRECT_PATH?.trim(),
+        '/home/u827794112/domains/ahwuae.com/public_html/investorupload/uploads',
+        '/home/u827794112/investorupload/uploads',
         '/home/u827794112/investoredu/uploads',
         '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
     ].filter(Boolean);
@@ -141,8 +147,9 @@ const MEDIA_URL_REWRITE_RULES = [
     /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i,
     /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i,
     /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i,
-    /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/([^/]+)$/i,
     /^https?:\/\/ahwuae\.com\/investoredu\/investoredu\/uploads\/([^/]+)$/i,
+    /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/([^/]+)$/i,
+    /^https?:\/\/ahwuae\.com\/investorupload\/uploads\/([^/]+)$/i,
     /^https?:\/\/[^/]+\/uploads\/(.+)$/i,
 ];
 function extractFilenameFromUrlPath(urlPath) {

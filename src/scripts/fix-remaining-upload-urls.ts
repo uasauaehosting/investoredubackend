@@ -3,9 +3,9 @@ import { initConnection, executeQuery, executeUpdate } from '../utils/database';
 import { normalizeMediaUrl } from '../utils/ftp';
 
 const URL_COLUMNS = ['image_url', 'file_url', 'image', 'thumbnail_url', 'cover_image'];
-// Match single /investoredu/uploads/ URLs, not the correct /investoredu/investoredu/uploads/
-const OLD_PATTERN = '%ahwuae.com/investoredu/uploads/%';
-const CORRECT_PATTERN = '%investoredu/investoredu/uploads/%';
+// Match legacy investoredu upload URLs (single or double path)
+const OLD_PATTERN = '%ahwuae.com/investoredu/%uploads/%';
+const CORRECT_PATTERN = '%investorupload/uploads/%';
 
 async function main() {
   await initConnection();

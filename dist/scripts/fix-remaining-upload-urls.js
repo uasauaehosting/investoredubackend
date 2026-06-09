@@ -4,8 +4,8 @@ require("dotenv/config");
 const database_1 = require("../utils/database");
 const ftp_1 = require("../utils/ftp");
 const URL_COLUMNS = ['image_url', 'file_url', 'image', 'thumbnail_url', 'cover_image'];
-const OLD_PATTERN = '%ahwuae.com/investoredu/uploads/%';
-const CORRECT_PATTERN = '%investoredu/investoredu/uploads/%';
+const OLD_PATTERN = '%ahwuae.com/investoredu/%uploads/%';
+const CORRECT_PATTERN = '%investorupload/uploads/%';
 async function main() {
     await (0, database_1.initConnection)();
     const placeholders = URL_COLUMNS.map(() => '?').join(', ');
