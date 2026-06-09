@@ -800,7 +800,8 @@ router.post('/member-activities', authenticate, authorize('Super Admin', 'Admin'
 
 router.get('/member-strategies-projects', async (req: any, res: any) => {
   try {
-    const projects = await MemberStrategyProject.findAll();
+    const includeInactive = req.query.is_active === 'all';
+    const projects = await MemberStrategyProject.findAll({ includeInactive });
     res.json(projects);
   } catch (error: any) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -809,12 +810,12 @@ router.get('/member-strategies-projects', async (req: any, res: any) => {
 
 router.post('/member-strategies-projects', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
   body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('memberId').notEmpty().withMessage('Member ID is required').isInt(),
-  body('categoryId').notEmpty().withMessage('Category ID is required').isInt(),
-  body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-  optionalUrl('fileUrl', 'File URL must be a valid URL', { require_tld: true }),
-  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
+  body('description').optional(),
+  body('authority_name').notEmpty().withMessage('Authority name is required'),
+  body('type').isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('file_url', 'File URL must be a valid URL'),
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -822,20 +823,16 @@ router.post('/member-strategies-projects', authenticate, authorize('Super Admin'
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const projectData = {
+    const projectId = await MemberStrategyProject.create({
       title: req.body.title,
-      description: req.body.description,
-      memberId: req.body.memberId,
-      type: req.body.type || 'Project',
-      status: req.body.status || 'Active',
-      start_date: new Date(req.body.date || Date.now()),
-      end_date: req.body.endDate ? new Date(req.body.endDate) : undefined,
-      budget: req.body.budget || 0,
-      isActive: req.body.isActive !== undefined ? req.body.isActive : true
-    };
+      description: req.body.description || 'View Description',
+      authority_name: req.body.authority_name,
+      type: req.body.type,
+      file_url: req.body.fileUrl || req.body.file_url || null,
+      isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+    });
 
-    const projectId = await MemberStrategyProject.create(projectData);
-    const project = await MemberStrategyProject.findById(projectId);
+    const project = await MemberStrategyProject.findById(projectId, true);
     res.status(201).json(project);
   } catch (error: any) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -844,12 +841,12 @@ router.post('/member-strategies-projects', authenticate, authorize('Super Admin'
 
 router.put('/member-strategies-projects/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
   body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().notEmpty().withMessage('Description cannot be empty'),
-  body('memberId').optional().isInt(),
-  body('categoryId').optional().isInt(),
-  body('date').optional().isISO8601().withMessage('Date must be a valid date'),
-  optionalUrl('fileUrl', 'File URL must be a valid URL', { require_tld: true }),
-  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
+  body('description').optional(),
+  body('authority_name').optional().notEmpty().withMessage('Authority name cannot be empty'),
+  body('type').optional().isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
+  optionalUrl('fileUrl', 'File URL must be a valid URL'),
+  optionalUrl('file_url', 'File URL must be a valid URL'),
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -857,12 +854,19 @@ router.put('/member-strategies-projects/:id', authenticate, authorize('Super Adm
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const updated = await MemberStrategyProject.update(parseInt(req.params.id), req.body);
+    const updated = await MemberStrategyProject.update(parseInt(req.params.id), {
+      title: req.body.title,
+      description: req.body.description,
+      authority_name: req.body.authority_name,
+      type: req.body.type,
+      fileUrl: req.body.fileUrl ?? req.body.file_url,
+      isActive: req.body.isActive,
+    });
     if (!updated) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    const project = await MemberStrategyProject.findById(parseInt(req.params.id));
+    const project = await MemberStrategyProject.findById(parseInt(req.params.id), true);
     res.json(project);
   } catch (error: any) {
     res.status(500).json({ message: 'Server error', error: error.message });

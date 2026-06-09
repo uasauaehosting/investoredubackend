@@ -110,27 +110,26 @@ export interface IMemberActivity {
   updatedAt?: Date;
 }
 
+export type StrategyProjectType = 'Strategy' | 'Report';
+
 export interface IMemberStrategyProject {
   id?: number;
   title: string;
   description: string;
-  memberId: number;
-  type: string;
-  status: string;
-  start_date: Date;
-  end_date?: Date;
+  authority_name: string;
+  memberId?: number | null;
+  type: StrategyProjectType | string;
+  status?: string;
+  start_date?: Date | string | null;
+  end_date?: Date | string | null;
   budget?: number;
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   memberName?: string;
-  categoryName?: string;
-  // Legacy fields for compatibility
-  categoryId?: null;
-  date?: Date;
-  fileUrl?: string;
-  views?: number;
-  downloads?: number;
+  categoryName?: string | null;
+  fileUrl?: string | null;
+  date?: Date | string | null;
 }
 
 export interface IAlertBulletin {
@@ -1041,170 +1040,106 @@ export class MemberActivityModel {
 
 // Member Strategy Project Model
 export class MemberStrategyProjectModel {
-  static async create(projectData: Omit<IMemberStrategyProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, description, memberId, type, status, start_date, end_date, budget, isActive = true } = projectData;
-    const query = `
-      INSERT INTO member_strategies_projects (title, description, member_id, type, status, start_date, end_date, budget, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    return await executeInsert(query, [title, description, memberId, type, status, start_date, end_date, budget, isActive]);
+  private static mapRow(result: Record<string, unknown>): IMemberStrategyProject {
+    const authorityName = String(result.authority_name ?? result.memberName ?? '');
+    return {
+      id: result.id as number,
+      title: String(result.title ?? ''),
+      description: String(result.description ?? ''),
+      authority_name: authorityName,
+      memberId: (result.member_id as number | null) ?? null,
+      type: String(result.type ?? ''),
+      status: String(result.status ?? 'Active'),
+      start_date: (result.start_date as string | null) ?? null,
+      end_date: (result.end_date as string | null) ?? null,
+      budget: result.budget != null ? Number(result.budget) : undefined,
+      isActive: result.is_active !== false && result.is_active !== 0,
+      createdAt: result.created_at as Date | undefined,
+      updatedAt: result.updated_at as Date | undefined,
+      memberName: authorityName,
+      categoryName: String(result.type ?? ''),
+      fileUrl: (result.file_url as string | null) ?? null,
+      date: (result.start_date as string | null) ?? null,
+    };
   }
 
-  static async findAll(): Promise<IMemberStrategyProject[]> {
+  static async create(projectData: {
+    title: string;
+    description: string;
+    authority_name: string;
+    type: StrategyProjectType | string;
+    file_url?: string | null;
+    isActive?: boolean;
+  }): Promise<number> {
+    const { title, description, authority_name, type, file_url, isActive = true } = projectData;
     const query = `
-      SELECT msp.*, m.name as memberName, c.name as categoryName
+      INSERT INTO member_strategies_projects (title, description, authority_name, type, status, file_url, is_active)
+      VALUES (?, ?, ?, ?, 'Active', ?, ?)
+    `;
+    return await executeInsert(query, [title, description, authority_name, type, file_url ?? null, isActive]);
+  }
+
+  static async findAll(options: { includeInactive?: boolean } = {}): Promise<IMemberStrategyProject[]> {
+    const activeClause = options.includeInactive ? '' : 'WHERE msp.is_active = true';
+    const query = `
+      SELECT msp.*, COALESCE(msp.authority_name, m.name) as memberName
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
-      LEFT JOIN categories c ON msp.category_id = c.id
-      WHERE msp.is_active = true 
-      ORDER BY COALESCE(msp.date, msp.start_date) DESC
+      ${activeClause}
+      ORDER BY COALESCE(msp.authority_name, m.name), msp.type, msp.title
     `;
-    const results = await executeQuery<any>(query);
-    return results.map(result => ({
-      id: result.id,
-      title: result.title,
-      description: result.description,
-      memberId: result.member_id,
-      type: result.type,
-      status: result.status,
-      start_date: result.start_date || result.date,
-      end_date: result.end_date,
-      budget: result.budget,
-      isActive: result.is_active,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at,
-      memberName: result.memberName,
-      categoryName: result.categoryName,
-      categoryId: result.category_id ?? null,
-      date: result.date || result.start_date,
-      fileUrl: result.file_url || '',
-      views: result.views ?? 0,
-      downloads: result.downloads ?? 0
-    }));
+    const results = await executeQuery<Record<string, unknown>>(query);
+    return results.map((result) => this.mapRow(result));
   }
 
-  static async findById(id: number): Promise<IMemberStrategyProject | null> {
+  static async findById(id: number, includeInactive = false): Promise<IMemberStrategyProject | null> {
+    const activeClause = includeInactive ? '' : 'AND msp.is_active = true';
     const query = `
-      SELECT msp.*, m.name as memberName 
+      SELECT msp.*, COALESCE(msp.authority_name, m.name) as memberName
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
-      WHERE msp.id = ? AND msp.is_active = true
+      WHERE msp.id = ? ${activeClause}
     `;
-    const result = await executeSingleQuery<any>(query, [id]);
-    if (result) {
-      return {
-        id: result.id,
-        title: result.title,
-        description: result.description,
-        memberId: result.member_id,
-        type: result.type,
-        status: result.status,
-        start_date: result.start_date,
-        end_date: result.end_date,
-        budget: result.budget,
-        isActive: result.is_active,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at,
-        memberName: result.memberName,
-        categoryName: null, // No category join
-        // Legacy fields for compatibility
-        categoryId: null,
-        date: result.start_date,
-        fileUrl: '',
-        views: 0,
-        downloads: 0
-      };
-    }
-    return null;
+    const result = await executeSingleQuery<Record<string, unknown>>(query, [id]);
+    return result ? this.mapRow(result) : null;
   }
 
-  static async findByMember(memberId: number): Promise<IMemberStrategyProject[]> {
-    const query = `
-      SELECT msp.*, m.name as memberName 
-      FROM member_strategies_projects msp
-      LEFT JOIN members m ON msp.member_id = m.id
-      WHERE msp.member_id = ? AND msp.is_active = true 
-      ORDER BY msp.start_date DESC
-    `;
-    const results = await executeQuery<any>(query, [memberId]);
-    return results.map(result => ({
-      id: result.id,
-      title: result.title,
-      description: result.description,
-      memberId: result.member_id,
-      type: result.type,
-      status: result.status,
-      start_date: result.start_date,
-      end_date: result.end_date,
-      budget: result.budget,
-      isActive: result.is_active,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at,
-      memberName: result.memberName,
-      categoryName: null, // No category join
-      // Legacy fields for compatibility
-      categoryId: null,
-      date: result.start_date,
-      fileUrl: '',
-      views: 0,
-      downloads: 0
-    }));
-  }
-
-  static async findByCategory(categoryId: number): Promise<IMemberStrategyProject[]> {
-    // No category_id column exists, return empty array
-    return [];
-  }
-
-  static async update(id: number, updateData: Partial<IMemberStrategyProject>): Promise<boolean> {
-    const { title, description, memberId, type, status, start_date, end_date, budget, isActive } = updateData;
+  static async update(id: number, updateData: Partial<IMemberStrategyProject> & { file_url?: string | null }): Promise<boolean> {
     const fields: string[] = [];
-    const values: any[] = [];
-    
-    if (title !== undefined) {
+    const values: unknown[] = [];
+
+    if (updateData.title !== undefined) {
       fields.push('title = ?');
-      values.push(title);
+      values.push(updateData.title);
     }
-    if (description !== undefined) {
+    if (updateData.description !== undefined) {
       fields.push('description = ?');
-      values.push(description);
+      values.push(updateData.description);
     }
-    if (memberId !== undefined) {
-      fields.push('member_id = ?');
-      values.push(memberId);
+    if (updateData.authority_name !== undefined) {
+      fields.push('authority_name = ?');
+      values.push(updateData.authority_name);
     }
-    if (type !== undefined) {
+    if (updateData.type !== undefined) {
       fields.push('type = ?');
-      values.push(type);
+      values.push(updateData.type);
     }
-    if (status !== undefined) {
-      fields.push('status = ?');
-      values.push(status);
+    if (updateData.fileUrl !== undefined || updateData.file_url !== undefined) {
+      fields.push('file_url = ?');
+      values.push(updateData.fileUrl ?? updateData.file_url ?? null);
     }
-    if (start_date !== undefined) {
-      fields.push('start_date = ?');
-      values.push(start_date);
-    }
-    if (end_date !== undefined) {
-      fields.push('end_date = ?');
-      values.push(end_date);
-    }
-    if (budget !== undefined) {
-      fields.push('budget = ?');
-      values.push(budget);
-    }
-    if (isActive !== undefined) {
+    if (updateData.isActive !== undefined) {
       fields.push('is_active = ?');
-      values.push(isActive);
+      values.push(updateData.isActive);
     }
-    
+
     if (fields.length === 0) {
       return false;
     }
-    
+
     fields.push('updated_at = CURRENT_TIMESTAMP');
     values.push(id);
-    
+
     const query = `UPDATE member_strategies_projects SET ${fields.join(', ')} WHERE id = ?`;
     const result = await executeUpdate(query, values);
     return result > 0;

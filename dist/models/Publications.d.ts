@@ -14,7 +14,7 @@ export interface Publication {
 export interface PublicationFilters {
     authorities?: string[];
     categories?: string[];
-    is_active?: boolean;
+    is_active?: boolean | null;
 }
 export declare class PublicationsModel {
     static getAll(filters?: PublicationFilters): Promise<Publication[]>;

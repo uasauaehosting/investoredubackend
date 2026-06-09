@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const Programs_1 = require("../models/Programs");
+const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
 router.get('/', async (req, res) => {
     try {
@@ -163,7 +164,7 @@ router.get('/search/:searchTerm', async (req, res) => {
         });
     }
 });
-router.post('/', async (req, res) => {
+router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const programData = req.body;
         if (!programData.member_name) {
@@ -208,7 +209,7 @@ router.post('/', async (req, res) => {
         });
     }
 });
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const { id } = req.params;
         const updateData = { ...req.body, id: parseInt(id) };
@@ -254,7 +255,7 @@ router.put('/:id', async (req, res) => {
         });
     }
 });
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const success = await Programs_1.ProgramsModel.softDelete(parseInt(id));

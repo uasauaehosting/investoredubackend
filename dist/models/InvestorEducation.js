@@ -603,6 +603,7 @@ function mapInvestmentProductRow(result) {
         fileUrl: result.file_url,
         imageUrl: result.image_url,
         content: result.content,
+        slug: result.slug ?? undefined,
         authorityId: result.authority_id,
         categoryId: result.category_id,
         views: result.views,
@@ -614,33 +615,22 @@ function mapInvestmentProductRow(result) {
 }
 class InvestmentProductModel {
     static async create(productData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = productData;
+        const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = productData;
         const query = `
-      INSERT INTO investment_products (title, description, author, date, file_url, image_url, content, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO investment_products (title, description, author, date, file_url, image_url, content, slug, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, description, author, date, fileUrl, imageUrl, content, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC';
+        const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
-        return results.map(result => ({
-            id: result.id,
-            title: result.title,
-            description: result.description,
-            author: result.author,
-            date: result.date,
-            fileUrl: result.file_url,
-            imageUrl: result.image_url,
-            content: result.content,
-            authorityId: result.authority_id,
-            categoryId: result.category_id,
-            views: result.views,
-            downloads: result.downloads,
-            isActive: result.is_active,
-            createdAt: result.created_at,
-            updatedAt: result.updated_at
-        }));
+        return results.map((result) => mapInvestmentProductRow(result));
+    }
+    static async findAllAdmin() {
+        const query = 'SELECT * FROM investment_products ORDER BY date DESC, id DESC';
+        const results = await (0, database_1.executeQuery)(query);
+        return results.map((result) => mapInvestmentProductRow(result));
     }
     static async findById(id) {
         const query = 'SELECT * FROM investment_products WHERE id = ? AND is_active = true';
@@ -653,13 +643,10 @@ class InvestmentProductModel {
     static async findBySlug(slug) {
         const query = 'SELECT * FROM investment_products WHERE slug = ? AND is_active = true';
         const result = await (0, database_1.executeSingleQuery)(query, [slug]);
-        if (result) {
-            return { ...mapInvestmentProductRow(result), slug: result.slug };
-        }
-        return null;
+        return result ? mapInvestmentProductRow(result) : null;
     }
     static async update(id, updateData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;
+        const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];
         if (title !== undefined) {
@@ -689,6 +676,10 @@ class InvestmentProductModel {
         if (content !== undefined) {
             updateFields.push('content = ?');
             updateValues.push(content);
+        }
+        if (slug !== undefined) {
+            updateFields.push('slug = ?');
+            updateValues.push(slug);
         }
         if (authorityId !== undefined) {
             updateFields.push('authority_id = ?');
@@ -841,152 +832,85 @@ class MemberActivityModel {
 exports.MemberActivityModel = MemberActivityModel;
 exports.MemberActivity = MemberActivityModel;
 class MemberStrategyProjectModel {
-    static async create(projectData) {
-        const { title, description, memberId, type, status, start_date, end_date, budget, isActive = true } = projectData;
-        const query = `
-      INSERT INTO member_strategies_projects (title, description, member_id, type, status, start_date, end_date, budget, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-        return await (0, database_1.executeInsert)(query, [title, description, memberId, type, status, start_date, end_date, budget, isActive]);
+    static mapRow(result) {
+        const authorityName = String(result.authority_name ?? result.memberName ?? '');
+        return {
+            id: result.id,
+            title: String(result.title ?? ''),
+            description: String(result.description ?? ''),
+            authority_name: authorityName,
+            memberId: result.member_id ?? null,
+            type: String(result.type ?? ''),
+            status: String(result.status ?? 'Active'),
+            start_date: result.start_date ?? null,
+            end_date: result.end_date ?? null,
+            budget: result.budget != null ? Number(result.budget) : undefined,
+            isActive: result.is_active !== false && result.is_active !== 0,
+            createdAt: result.created_at,
+            updatedAt: result.updated_at,
+            memberName: authorityName,
+            categoryName: String(result.type ?? ''),
+            fileUrl: result.file_url ?? null,
+            date: result.start_date ?? null,
+        };
     }
-    static async findAll() {
+    static async create(projectData) {
+        const { title, description, authority_name, type, file_url, isActive = true } = projectData;
         const query = `
-      SELECT msp.*, m.name as memberName, c.name as categoryName
+      INSERT INTO member_strategies_projects (title, description, authority_name, type, status, file_url, is_active)
+      VALUES (?, ?, ?, ?, 'Active', ?, ?)
+    `;
+        return await (0, database_1.executeInsert)(query, [title, description, authority_name, type, file_url ?? null, isActive]);
+    }
+    static async findAll(options = {}) {
+        const activeClause = options.includeInactive ? '' : 'WHERE msp.is_active = true';
+        const query = `
+      SELECT msp.*, COALESCE(msp.authority_name, m.name) as memberName
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
-      LEFT JOIN categories c ON msp.category_id = c.id
-      WHERE msp.is_active = true 
-      ORDER BY COALESCE(msp.date, msp.start_date) DESC
+      ${activeClause}
+      ORDER BY COALESCE(msp.authority_name, m.name), msp.type, msp.title
     `;
         const results = await (0, database_1.executeQuery)(query);
-        return results.map(result => ({
-            id: result.id,
-            title: result.title,
-            description: result.description,
-            memberId: result.member_id,
-            type: result.type,
-            status: result.status,
-            start_date: result.start_date || result.date,
-            end_date: result.end_date,
-            budget: result.budget,
-            isActive: result.is_active,
-            createdAt: result.created_at,
-            updatedAt: result.updated_at,
-            memberName: result.memberName,
-            categoryName: result.categoryName,
-            categoryId: result.category_id ?? null,
-            date: result.date || result.start_date,
-            fileUrl: result.file_url || '',
-            views: result.views ?? 0,
-            downloads: result.downloads ?? 0
-        }));
+        return results.map((result) => this.mapRow(result));
     }
-    static async findById(id) {
+    static async findById(id, includeInactive = false) {
+        const activeClause = includeInactive ? '' : 'AND msp.is_active = true';
         const query = `
-      SELECT msp.*, m.name as memberName 
+      SELECT msp.*, COALESCE(msp.authority_name, m.name) as memberName
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
-      WHERE msp.id = ? AND msp.is_active = true
+      WHERE msp.id = ? ${activeClause}
     `;
         const result = await (0, database_1.executeSingleQuery)(query, [id]);
-        if (result) {
-            return {
-                id: result.id,
-                title: result.title,
-                description: result.description,
-                memberId: result.member_id,
-                type: result.type,
-                status: result.status,
-                start_date: result.start_date,
-                end_date: result.end_date,
-                budget: result.budget,
-                isActive: result.is_active,
-                createdAt: result.created_at,
-                updatedAt: result.updated_at,
-                memberName: result.memberName,
-                categoryName: null,
-                categoryId: null,
-                date: result.start_date,
-                fileUrl: '',
-                views: 0,
-                downloads: 0
-            };
-        }
-        return null;
-    }
-    static async findByMember(memberId) {
-        const query = `
-      SELECT msp.*, m.name as memberName 
-      FROM member_strategies_projects msp
-      LEFT JOIN members m ON msp.member_id = m.id
-      WHERE msp.member_id = ? AND msp.is_active = true 
-      ORDER BY msp.start_date DESC
-    `;
-        const results = await (0, database_1.executeQuery)(query, [memberId]);
-        return results.map(result => ({
-            id: result.id,
-            title: result.title,
-            description: result.description,
-            memberId: result.member_id,
-            type: result.type,
-            status: result.status,
-            start_date: result.start_date,
-            end_date: result.end_date,
-            budget: result.budget,
-            isActive: result.is_active,
-            createdAt: result.created_at,
-            updatedAt: result.updated_at,
-            memberName: result.memberName,
-            categoryName: null,
-            categoryId: null,
-            date: result.start_date,
-            fileUrl: '',
-            views: 0,
-            downloads: 0
-        }));
-    }
-    static async findByCategory(categoryId) {
-        return [];
+        return result ? this.mapRow(result) : null;
     }
     static async update(id, updateData) {
-        const { title, description, memberId, type, status, start_date, end_date, budget, isActive } = updateData;
         const fields = [];
         const values = [];
-        if (title !== undefined) {
+        if (updateData.title !== undefined) {
             fields.push('title = ?');
-            values.push(title);
+            values.push(updateData.title);
         }
-        if (description !== undefined) {
+        if (updateData.description !== undefined) {
             fields.push('description = ?');
-            values.push(description);
+            values.push(updateData.description);
         }
-        if (memberId !== undefined) {
-            fields.push('member_id = ?');
-            values.push(memberId);
+        if (updateData.authority_name !== undefined) {
+            fields.push('authority_name = ?');
+            values.push(updateData.authority_name);
         }
-        if (type !== undefined) {
+        if (updateData.type !== undefined) {
             fields.push('type = ?');
-            values.push(type);
+            values.push(updateData.type);
         }
-        if (status !== undefined) {
-            fields.push('status = ?');
-            values.push(status);
+        if (updateData.fileUrl !== undefined || updateData.file_url !== undefined) {
+            fields.push('file_url = ?');
+            values.push(updateData.fileUrl ?? updateData.file_url ?? null);
         }
-        if (start_date !== undefined) {
-            fields.push('start_date = ?');
-            values.push(start_date);
-        }
-        if (end_date !== undefined) {
-            fields.push('end_date = ?');
-            values.push(end_date);
-        }
-        if (budget !== undefined) {
-            fields.push('budget = ?');
-            values.push(budget);
-        }
-        if (isActive !== undefined) {
+        if (updateData.isActive !== undefined) {
             fields.push('is_active = ?');
-            values.push(isActive);
+            values.push(updateData.isActive);
         }
         if (fields.length === 0) {
             return false;

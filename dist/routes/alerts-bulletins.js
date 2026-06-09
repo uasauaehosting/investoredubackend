@@ -5,14 +5,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const AlertsBulletins_1 = require("../models/AlertsBulletins");
+const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
 router.get('/', async (req, res) => {
     try {
+        const isActiveParam = req.query.is_active;
         const filters = {
             type: req.query.type,
             authority: req.query.authority,
             year: req.query.year,
-            is_active: req.query.is_active === 'true' ? true : req.query.is_active === 'false' ? false : undefined
+            is_active: isActiveParam === 'all'
+                ? null
+                : isActiveParam === 'false'
+                    ? false
+                    : true,
         };
         const alertsBulletins = await AlertsBulletins_1.AlertsBulletinsModel.getAll(filters);
         res.json(alertsBulletins);
@@ -69,7 +75,7 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch alert/bulletin' });
     }
 });
-router.post('/', async (req, res) => {
+router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const alertBulletinData = req.body;
         if (!alertBulletinData.title || !alertBulletinData.type || !alertBulletinData.authority_name) {
@@ -90,7 +96,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Failed to create alert/bulletin' });
     }
 });
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
@@ -113,7 +119,7 @@ router.put('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to update alert/bulletin' });
     }
 });
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {

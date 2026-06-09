@@ -79,6 +79,7 @@ export interface IInvestmentProduct {
     fileUrl: string;
     imageUrl: string;
     content?: string;
+    slug?: string;
     authorityId?: number;
     categoryId?: number;
     views: number;
@@ -100,26 +101,25 @@ export interface IMemberActivity {
     createdAt?: Date;
     updatedAt?: Date;
 }
+export type StrategyProjectType = 'Strategy' | 'Report';
 export interface IMemberStrategyProject {
     id?: number;
     title: string;
     description: string;
-    memberId: number;
-    type: string;
-    status: string;
-    start_date: Date;
-    end_date?: Date;
+    authority_name: string;
+    memberId?: number | null;
+    type: StrategyProjectType | string;
+    status?: string;
+    start_date?: Date | string | null;
+    end_date?: Date | string | null;
     budget?: number;
     isActive: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     memberName?: string;
-    categoryName?: string;
-    categoryId?: null;
-    date?: Date;
-    fileUrl?: string;
-    views?: number;
-    downloads?: number;
+    categoryName?: string | null;
+    fileUrl?: string | null;
+    date?: Date | string | null;
 }
 export interface IAlertBulletin {
     id?: number;
@@ -179,10 +179,9 @@ export declare class PrincipleModel {
 export declare class InvestmentProductModel {
     static create(productData: Omit<IInvestmentProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;
     static findAll(): Promise<IInvestmentProduct[]>;
+    static findAllAdmin(): Promise<IInvestmentProduct[]>;
     static findById(id: number): Promise<IInvestmentProduct | null>;
-    static findBySlug(slug: string): Promise<(IInvestmentProduct & {
-        slug?: string;
-    }) | null>;
+    static findBySlug(slug: string): Promise<IInvestmentProduct | null>;
     static update(id: number, updateData: Partial<IInvestmentProduct>): Promise<boolean>;
     static delete(id: number): Promise<boolean>;
 }
@@ -195,12 +194,22 @@ export declare class MemberActivityModel {
     static delete(id: number): Promise<boolean>;
 }
 export declare class MemberStrategyProjectModel {
-    static create(projectData: Omit<IMemberStrategyProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;
-    static findAll(): Promise<IMemberStrategyProject[]>;
-    static findById(id: number): Promise<IMemberStrategyProject | null>;
-    static findByMember(memberId: number): Promise<IMemberStrategyProject[]>;
-    static findByCategory(categoryId: number): Promise<IMemberStrategyProject[]>;
-    static update(id: number, updateData: Partial<IMemberStrategyProject>): Promise<boolean>;
+    private static mapRow;
+    static create(projectData: {
+        title: string;
+        description: string;
+        authority_name: string;
+        type: StrategyProjectType | string;
+        file_url?: string | null;
+        isActive?: boolean;
+    }): Promise<number>;
+    static findAll(options?: {
+        includeInactive?: boolean;
+    }): Promise<IMemberStrategyProject[]>;
+    static findById(id: number, includeInactive?: boolean): Promise<IMemberStrategyProject | null>;
+    static update(id: number, updateData: Partial<IMemberStrategyProject> & {
+        file_url?: string | null;
+    }): Promise<boolean>;
     static delete(id: number): Promise<boolean>;
 }
 export declare class AlertBulletinModel {

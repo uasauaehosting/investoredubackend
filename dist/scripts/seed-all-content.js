@@ -13,6 +13,10 @@ const Portals_1 = require("../models/Portals");
 const InvestorEducation_1 = require("../models/InvestorEducation");
 const EducationContent_1 = require("../models/EducationContent");
 const Admin_1 = require("../models/Admin");
+const Publications_1 = require("../models/Publications");
+const Programs_1 = require("../models/Programs");
+const publicationsSeed_1 = require("../data/publicationsSeed");
+const programsSeed_1 = require("../data/programsSeed");
 const FRONTEND = path_1.default.resolve(__dirname, '../../../investoredufrontend/src');
 async function runMigrations() {
     const statements = [
@@ -303,6 +307,61 @@ async function seedAdmins() {
         console.log(`  ✓ admin: ${admin.username}`);
     }
 }
+async function seedPublications() {
+    await (0, database_1.executeQuery)('DROP TABLE IF EXISTS publications');
+    await (0, database_1.executeQuery)(`
+    CREATE TABLE publications (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(500) NOT NULL,
+      description TEXT,
+      authority_name VARCHAR(255) NOT NULL,
+      category ENUM('Brochure', 'Code', 'General', 'Guide', 'Others', 'Report', 'Study') NOT NULL,
+      file_url VARCHAR(1000),
+      date_published DATE,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      INDEX idx_authority (authority_name),
+      INDEX idx_category (category),
+      INDEX idx_active (is_active),
+      INDEX idx_date_published (date_published)
+    )
+  `);
+    for (const row of publicationsSeed_1.PUBLICATIONS_SEED_DATA) {
+        await Publications_1.PublicationsModel.create({
+            title: row.title,
+            description: row.description,
+            authority_name: row.authority_name,
+            category: row.category,
+            file_url: row.file_url,
+            is_active: true,
+        });
+    }
+    console.log(`  ✓ publications: ${publicationsSeed_1.PUBLICATIONS_SEED_DATA.length} entries`);
+}
+async function seedPrograms() {
+    const existing = await Programs_1.ProgramsModel.count();
+    if (existing >= programsSeed_1.PROGRAMS_SEED_DATA.length) {
+        console.log(`  ⊘ programs already has ${existing} entries`);
+        return;
+    }
+    if (existing > 0) {
+        await (0, database_1.executeQuery)('DELETE FROM programs');
+    }
+    for (const row of programsSeed_1.PROGRAMS_SEED_DATA) {
+        await Programs_1.ProgramsModel.create({
+            member_name: row.member_name,
+            general_info: row.general_info,
+            education_materials: row.education_materials,
+            specific_materials: row.specific_materials,
+            assisting_groups: row.assisting_groups,
+            evaluation: row.evaluation,
+            successful_programs: row.successful_programs,
+            is_active: true,
+        });
+    }
+    console.log(`  ✓ programs: ${programsSeed_1.PROGRAMS_SEED_DATA.length} entries`);
+}
 async function seedEducationContent() {
     const existing = await EducationContent_1.EducationContentModel.findAllAdmin();
     if (existing.length >= 6) {
@@ -360,6 +419,10 @@ async function main() {
     await seedInvestmentProducts();
     console.log('Seeding admin accounts...');
     await seedAdmins();
+    console.log('Seeding publications...');
+    await seedPublications();
+    console.log('Seeding programs...');
+    await seedPrograms();
     console.log('Seeding education section cards...');
     await seedEducationContent();
     console.log('\n✅ All content seeded successfully!');

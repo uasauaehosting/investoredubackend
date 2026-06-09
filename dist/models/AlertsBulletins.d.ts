@@ -37,7 +37,7 @@ export interface AlertBulletinFilters {
     type?: 'Alert' | 'Bulletin';
     authority?: string;
     year?: string;
-    is_active?: boolean;
+    is_active?: boolean | null;
 }
 export declare class AlertsBulletinsModel {
     static getAll(filters?: AlertBulletinFilters): Promise<AlertBulletin[]>;

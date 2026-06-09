@@ -8,6 +8,10 @@ const express_validator_1 = require("express-validator");
 const models_1 = require("../models");
 const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
+const optionalUrl = (field, message, options = {}) => (0, express_validator_1.body)(field)
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL({ require_tld: options.require_tld ?? false })
+    .withMessage(message);
 router.get('/authorities', async (req, res) => {
     try {
         const authorities = await models_1.Authority.findAll();
@@ -299,8 +303,8 @@ router.post('/frameworks', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
     (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
     (0, express_validator_1.body)('authorityId').optional().custom((value) => {
         if (value === null || value === undefined)
@@ -348,8 +352,8 @@ router.put('/frameworks/:id', auth_1.authenticate, (0, auth_1.authorize)('Super 
     (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
     (0, express_validator_1.body)('authorityId').optional().custom((value) => {
         if (value === null || value === undefined)
@@ -435,8 +439,8 @@ router.post('/principles', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
     (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
     (0, express_validator_1.body)('authorityId').optional().custom((value) => {
         if (value === null || value === undefined)
@@ -484,8 +488,8 @@ router.put('/principles/:id', auth_1.authenticate, (0, auth_1.authorize)('Super 
     (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
     (0, express_validator_1.body)('authorityId').optional().custom((value) => {
         if (value === null || value === undefined)
@@ -552,6 +556,15 @@ router.get('/investment-products/slug/:slug', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+router.get('/investment-products/admin', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
+    try {
+        const products = await models_1.InvestmentProductModel.findAllAdmin();
+        res.json(products);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 router.get('/investment-products/:id', async (req, res) => {
     try {
         const productId = parseInt(req.params.id);
@@ -570,9 +583,10 @@ router.post('/investment-products', auth_1.authenticate, (0, auth_1.authorize)('
     (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
+    (0, express_validator_1.body)('slug').optional().isString(),
     (0, express_validator_1.body)('authorityId').optional().custom((value) => {
         if (value === null || value === undefined)
             return true;
@@ -600,6 +614,7 @@ router.post('/investment-products', auth_1.authenticate, (0, auth_1.authorize)('
             fileUrl: req.body.fileUrl || '',
             imageUrl: req.body.imageUrl || '',
             content: req.body.content || '',
+            slug: req.body.slug || null,
             authorityId: req.body.authorityId || null,
             categoryId: req.body.categoryId || null,
             views: req.body.views || 0,
@@ -619,9 +634,10 @@ router.put('/investment-products/:id', auth_1.authenticate, (0, auth_1.authorize
     (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL({ require_tld: false }).withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('imageUrl').optional().isURL({ require_tld: false }).withMessage('Image URL must be a valid URL'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
+    (0, express_validator_1.body)('slug').optional().isString(),
     (0, express_validator_1.body)('authorityId').optional().custom((value) => {
         if (value === null || value === undefined)
             return true;
@@ -710,7 +726,8 @@ router.post('/member-activities', auth_1.authenticate, (0, auth_1.authorize)('Su
 });
 router.get('/member-strategies-projects', async (req, res) => {
     try {
-        const projects = await models_1.MemberStrategyProject.findAll();
+        const includeInactive = req.query.is_active === 'all';
+        const projects = await models_1.MemberStrategyProject.findAll({ includeInactive });
         res.json(projects);
     }
     catch (error) {
@@ -719,31 +736,27 @@ router.get('/member-strategies-projects', async (req, res) => {
 });
 router.post('/member-strategies-projects', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
     (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
-    (0, express_validator_1.body)('memberId').notEmpty().withMessage('Member ID is required').isInt(),
-    (0, express_validator_1.body)('categoryId').notEmpty().withMessage('Category ID is required').isInt(),
-    (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL().withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
+    (0, express_validator_1.body)('description').optional(),
+    (0, express_validator_1.body)('authority_name').notEmpty().withMessage('Authority name is required'),
+    (0, express_validator_1.body)('type').isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('file_url', 'File URL must be a valid URL'),
+    (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const projectData = {
+        const projectId = await models_1.MemberStrategyProject.create({
             title: req.body.title,
-            description: req.body.description,
-            memberId: req.body.memberId,
-            type: req.body.type || 'Project',
-            status: req.body.status || 'Active',
-            start_date: new Date(req.body.date || Date.now()),
-            end_date: req.body.endDate ? new Date(req.body.endDate) : undefined,
-            budget: req.body.budget || 0,
-            isActive: req.body.isActive !== undefined ? req.body.isActive : true
-        };
-        const projectId = await models_1.MemberStrategyProject.create(projectData);
-        const project = await models_1.MemberStrategyProject.findById(projectId);
+            description: req.body.description || 'View Description',
+            authority_name: req.body.authority_name,
+            type: req.body.type,
+            file_url: req.body.fileUrl || req.body.file_url || null,
+            isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+        });
+        const project = await models_1.MemberStrategyProject.findById(projectId, true);
         res.status(201).json(project);
     }
     catch (error) {
@@ -752,23 +765,30 @@ router.post('/member-strategies-projects', auth_1.authenticate, (0, auth_1.autho
 });
 router.put('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
     (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
-    (0, express_validator_1.body)('memberId').optional().isInt(),
-    (0, express_validator_1.body)('categoryId').optional().isInt(),
-    (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
-    (0, express_validator_1.body)('fileUrl').optional().isURL().withMessage('File URL must be a valid URL'),
-    (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
+    (0, express_validator_1.body)('description').optional(),
+    (0, express_validator_1.body)('authority_name').optional().notEmpty().withMessage('Authority name cannot be empty'),
+    (0, express_validator_1.body)('type').optional().isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
+    optionalUrl('fileUrl', 'File URL must be a valid URL'),
+    optionalUrl('file_url', 'File URL must be a valid URL'),
+    (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const updated = await models_1.MemberStrategyProject.update(parseInt(req.params.id), req.body);
+        const updated = await models_1.MemberStrategyProject.update(parseInt(req.params.id), {
+            title: req.body.title,
+            description: req.body.description,
+            authority_name: req.body.authority_name,
+            type: req.body.type,
+            fileUrl: req.body.fileUrl ?? req.body.file_url,
+            isActive: req.body.isActive,
+        });
         if (!updated) {
             return res.status(404).json({ message: 'Project not found' });
         }
-        const project = await models_1.MemberStrategyProject.findById(parseInt(req.params.id));
+        const project = await models_1.MemberStrategyProject.findById(parseInt(req.params.id), true);
         res.json(project);
     }
     catch (error) {

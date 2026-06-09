@@ -15,7 +15,9 @@ class PublicationsModel {
       WHERE 1=1
     `;
         const params = [];
-        if (filters.is_active !== undefined) {
+        if (filters.is_active === null) {
+        }
+        else if (filters.is_active !== undefined) {
             query += ' AND is_active = ?';
             params.push(filters.is_active);
         }
