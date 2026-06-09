@@ -3,7 +3,9 @@ import { initConnection, executeQuery, executeUpdate } from '../utils/database';
 import { normalizeMediaUrl } from '../utils/ftp';
 
 const URL_COLUMNS = ['image_url', 'file_url', 'image', 'thumbnail_url', 'cover_image'];
-const OLD_PATTERN = '%ahwuae.com/investoredu/uploads%';
+// Match single /investoredu/uploads/ URLs, not the correct /investoredu/investoredu/uploads/
+const OLD_PATTERN = '%ahwuae.com/investoredu/uploads/%';
+const CORRECT_PATTERN = '%investoredu/investoredu/uploads/%';
 
 async function main() {
   await initConnection();
@@ -20,8 +22,8 @@ async function main() {
   for (const { TABLE_NAME, COLUMN_NAME } of columns) {
     const rows = await executeQuery<{ id: number; val: string }>(
       `SELECT id, \`${COLUMN_NAME}\` AS val FROM \`${TABLE_NAME}\`
-       WHERE \`${COLUMN_NAME}\` LIKE ?`,
-      [OLD_PATTERN]
+       WHERE \`${COLUMN_NAME}\` LIKE ? AND \`${COLUMN_NAME}\` NOT LIKE ?`,
+      [OLD_PATTERN, CORRECT_PATTERN]
     );
 
     for (const row of rows) {

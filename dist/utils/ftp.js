@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_FTP_PUBLIC_BASE_URL = exports.DEFAULT_FTP_REMOTE_PATH = void 0;
 exports.isFtpConfigured = isFtpConfigured;
 exports.getFtpConfig = getFtpConfig;
 exports.getPublicUploadUrl = getPublicUploadUrl;
@@ -22,13 +23,23 @@ function isFtpConfigured() {
         process.env.FTP_PASSWORD &&
         process.env.FTP_PUBLIC_BASE_URL);
 }
-const LEGACY_FTP_REMOTE_PATH = '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads';
+exports.DEFAULT_FTP_REMOTE_PATH = '/investoredu/investoredu/uploads';
+exports.DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
+const LEGACY_FTP_REMOTE_PATHS = [
+    '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
+    '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
+    '/investoredu/uploads',
+];
 function normalizeRemotePath(remotePath) {
     return remotePath.replace(/\\/g, '/');
 }
 function getDownloadRemotePaths(primaryPath) {
-    const legacy = process.env.FTP_LEGACY_REMOTE_PATH || LEGACY_FTP_REMOTE_PATH;
-    return [...new Set([primaryPath, legacy].map(normalizeRemotePath))];
+    const paths = [
+        primaryPath,
+        process.env.FTP_LEGACY_REMOTE_PATH,
+        ...LEGACY_FTP_REMOTE_PATHS,
+    ];
+    return [...new Set(paths.filter(Boolean).map((p) => normalizeRemotePath(p)))];
 }
 function getFtpConfig() {
     const host = process.env.FTP_HOST;
@@ -44,7 +55,7 @@ function getFtpConfig() {
         password,
         port: parseInt(process.env.FTP_PORT || '21', 10),
         secure: process.env.FTP_SECURE === 'true',
-        remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || '/investoredu/uploads'),
+        remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || exports.DEFAULT_FTP_REMOTE_PATH),
         publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
     };
 }

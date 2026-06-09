@@ -23,16 +23,26 @@ export function isFtpConfigured(): boolean {
   );
 }
 
-const LEGACY_FTP_REMOTE_PATH =
-  '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads';
+export const DEFAULT_FTP_REMOTE_PATH = '/investoredu/investoredu/uploads';
+export const DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investoredu/investoredu/uploads';
+
+const LEGACY_FTP_REMOTE_PATHS = [
+  '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
+  '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
+  '/investoredu/uploads',
+];
 
 function normalizeRemotePath(remotePath: string): string {
   return remotePath.replace(/\\/g, '/');
 }
 
 function getDownloadRemotePaths(primaryPath: string): string[] {
-  const legacy = process.env.FTP_LEGACY_REMOTE_PATH || LEGACY_FTP_REMOTE_PATH;
-  return [...new Set([primaryPath, legacy].map(normalizeRemotePath))];
+  const paths = [
+    primaryPath,
+    process.env.FTP_LEGACY_REMOTE_PATH,
+    ...LEGACY_FTP_REMOTE_PATHS,
+  ];
+  return [...new Set(paths.filter(Boolean).map((p) => normalizeRemotePath(p as string)))];
 }
 
 export function getFtpConfig(): FtpConfig {
@@ -51,7 +61,7 @@ export function getFtpConfig(): FtpConfig {
     password,
     port: parseInt(process.env.FTP_PORT || '21', 10),
     secure: process.env.FTP_SECURE === 'true',
-    remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || '/investoredu/uploads'),
+    remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || DEFAULT_FTP_REMOTE_PATH),
     publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
   };
 }
