@@ -35,4 +35,9 @@ __exportStar(require("./Glossary"), exports);
 __exportStar(require("./Feedback"), exports);
 __exportStar(require("./Admin"), exports);
 __exportStar(require("./Programs"), exports);
+__exportStar(require("./Publications"), exports);
+__exportStar(require("./EducationContent"), exports);
+__exportStar(require("./SiteContent"), exports);
+__exportStar(require("./Benchmarking"), exports);
+__exportStar(require("./FooterStats"), exports);
 //# sourceMappingURL=index.js.map

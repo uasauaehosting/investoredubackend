@@ -531,6 +531,18 @@ router.get('/investment-products', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+router.get('/investment-products/slug/:slug', async (req, res) => {
+    try {
+        const product = await models_1.InvestmentProductModel.findBySlug(req.params.slug);
+        if (!product) {
+            return res.status(404).json({ message: 'Investment product not found' });
+        }
+        res.json(product);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 router.get('/investment-products/:id', async (req, res) => {
     try {
         const productId = parseInt(req.params.id);
@@ -761,6 +773,117 @@ router.delete('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1
             return res.status(404).json({ message: 'Project not found' });
         }
         res.json({ message: 'Project deleted successfully' });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+router.get('/content', async (req, res) => {
+    try {
+        const section = req.query.section;
+        if (!section) {
+            return res.status(400).json({ message: 'section query parameter is required' });
+        }
+        const items = await models_1.EducationContent.findBySection(section);
+        res.json(items.map((item) => ({
+            id: item.id,
+            section: item.section,
+            title: item.title,
+            description: item.description,
+            imageUrl: item.imageUrl,
+            content: item.content,
+            displayOrder: item.displayOrder,
+            isActive: item.isActive,
+        })));
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+router.get('/content/admin', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
+    try {
+        const section = req.query.section;
+        const items = await models_1.EducationContent.findAllAdmin(section);
+        res.json(items.map((item) => ({
+            id: item.id,
+            section: item.section,
+            title: item.title,
+            description: item.description,
+            imageUrl: item.imageUrl,
+            content: item.content,
+            displayOrder: item.displayOrder,
+            isActive: item.isActive,
+        })));
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+router.get('/content/:id', async (req, res) => {
+    try {
+        const item = await models_1.EducationContent.findById(parseInt(req.params.id));
+        if (!item) {
+            return res.status(404).json({ message: 'Content not found' });
+        }
+        res.json({
+            id: item.id,
+            section: item.section,
+            title: item.title,
+            description: item.description,
+            imageUrl: item.imageUrl,
+            content: item.content,
+            displayOrder: item.displayOrder,
+            isActive: item.isActive,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+router.post('/content', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
+    try {
+        const id = await models_1.EducationContent.create({
+            section: req.body.section,
+            title: req.body.title,
+            description: req.body.description,
+            imageUrl: req.body.imageUrl ?? null,
+            content: req.body.content ?? null,
+            displayOrder: req.body.displayOrder ?? 0,
+            isActive: req.body.isActive !== false,
+        });
+        const item = await models_1.EducationContent.findById(id, false);
+        res.status(201).json(item);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+router.put('/content/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
+    try {
+        const updated = await models_1.EducationContent.update(parseInt(req.params.id), {
+            section: req.body.section,
+            title: req.body.title,
+            description: req.body.description,
+            imageUrl: req.body.imageUrl,
+            content: req.body.content,
+            displayOrder: req.body.displayOrder,
+            isActive: req.body.isActive,
+        });
+        if (!updated)
+            return res.status(404).json({ message: 'Content not found' });
+        const item = await models_1.EducationContent.findById(parseInt(req.params.id), false);
+        res.json(item);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+router.delete('/content/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
+    try {
+        const deleted = await models_1.EducationContent.delete(parseInt(req.params.id));
+        if (!deleted)
+            return res.status(404).json({ message: 'Content not found' });
+        res.json({ message: 'Content deleted' });
     }
     catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });

@@ -7,4 +7,9 @@ export * from './Glossary';
 export * from './Feedback';
 export * from './Admin';
 export * from './Programs';
+export * from './Publications';
+export * from './EducationContent';
+export * from './SiteContent';
+export * from './Benchmarking';
+export * from './FooterStats';
 //# sourceMappingURL=index.d.ts.map

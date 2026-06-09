@@ -178,6 +178,9 @@ export declare class InvestmentProductModel {
     static create(productData: Omit<IInvestmentProduct, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;
     static findAll(): Promise<IInvestmentProduct[]>;
     static findById(id: number): Promise<IInvestmentProduct | null>;
+    static findBySlug(slug: string): Promise<(IInvestmentProduct & {
+        slug?: string;
+    }) | null>;
     static update(id: number, updateData: Partial<IInvestmentProduct>): Promise<boolean>;
     static delete(id: number): Promise<boolean>;
 }

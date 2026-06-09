@@ -10,8 +10,10 @@ import { SiteContent, AboutSection, FooterStats } from '../models';
 import { GlossaryTerm } from '../models/Glossary';
 import { PortalModel } from '../models/Portals';
 import { InvestmentProductModel } from '../models/InvestorEducation';
+import { EducationContentModel } from '../models/EducationContent';
+import { AdminModel } from '../models/Admin';
 
-const FRONTEND = path.resolve(__dirname, '../../../frontend/src');
+const FRONTEND = path.resolve(__dirname, '../../../investoredufrontend/src');
 
 async function runMigrations() {
   const statements = [
@@ -310,6 +312,71 @@ async function seedInvestmentProducts() {
   console.log(`  ✓ investment_products: ${INVESTMENT_PRODUCTS.length} entries`);
 }
 
+async function seedAdmins() {
+  const admins = await executeQuery<{ username: string }>('SELECT username FROM admins WHERE is_active = true');
+  const usernames = new Set(admins.map((a) => a.username));
+
+  const defaults = [
+    { username: 'superadmin', email: 'superadmin@uasa.ae', password: 'admin123', firstName: 'Super', lastName: 'Admin', role: 'Super Admin' as const, permissions: ['all'] },
+    { username: 'admin', email: 'admin@uasa.ae', password: 'admin123', firstName: 'System', lastName: 'Admin', role: 'Admin' as const, permissions: ['content'] },
+  ];
+
+  for (const admin of defaults) {
+    if (usernames.has(admin.username)) {
+      console.log(`  ⊘ admin "${admin.username}" already exists`);
+      continue;
+    }
+    await AdminModel.create({ ...admin, isActive: true });
+    console.log(`  ✓ admin: ${admin.username}`);
+  }
+}
+
+async function seedEducationContent() {
+  const existing = await EducationContentModel.findAllAdmin();
+  if (existing.length >= 6) {
+    console.log(`  ⊘ education_content already has ${existing.length} entries`);
+    return;
+  }
+
+  const cards = [
+    { section: 'reading-materials', title: 'Principles', description: 'Core principles for investor education and financial literacy across Arab capital markets.', imageUrl: 'https://images.unsplash.com/photo-1454165804603-c3d57bc86b40?auto=format&fit=crop&q=80&w=800', content: 'Explore the foundational principles guiding investor education initiatives.', displayOrder: 1 },
+    { section: 'reading-materials', title: 'Framework', description: 'IOSCO strategic framework for investor education and financial literacy.', imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=800', content: 'Review the IOSCO framework and best practices for retail investor programs.', displayOrder: 2 },
+    { section: 'reading-materials', title: 'Investment Products', description: 'Literature and guides covering major investment product categories.', imageUrl: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800', content: 'Browse investment product literature from UASA member authorities.', displayOrder: 3 },
+    { section: 'members-activities', title: 'Publications', description: 'Brochures, guides, reports, and studies published by member authorities.', imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=800', content: 'Access publications from across the Arab region.', displayOrder: 1 },
+    { section: 'members-activities', title: 'Programs', description: 'Investor education programs and initiatives run by UASA members.', imageUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=800', content: 'Discover educational programs from member securities authorities.', displayOrder: 2 },
+    { section: 'members-activities', title: 'Portals', description: 'Links to member authority investor education portals across the region.', imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800', content: 'Visit member portals for localized investor education resources.', displayOrder: 3 },
+  ];
+
+  const alerts = await executeQuery<{ title: string; description: string; type: string }>(
+    'SELECT title, description, type FROM alerts_bulletins WHERE is_active = true ORDER BY date_published DESC LIMIT 6',
+  );
+
+  let order = 1;
+  for (const alert of alerts) {
+    cards.push({
+      section: 'alerts',
+      title: alert.title,
+      description: alert.description ?? alert.title,
+      imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=800',
+      content: `${alert.type}: ${alert.description ?? alert.title}`,
+      displayOrder: order++,
+    });
+  }
+
+  for (const card of cards) {
+    await EducationContentModel.create({
+      section: card.section,
+      title: card.title,
+      description: card.description,
+      imageUrl: card.imageUrl,
+      content: card.content,
+      displayOrder: card.displayOrder,
+      isActive: true,
+    });
+  }
+  console.log(`  ✓ education_content: ${cards.length} entries`);
+}
+
 async function main() {
   await initConnection();
   console.log('Running CMS migrations...');
@@ -332,6 +399,12 @@ async function main() {
 
   console.log('Seeding investment products...');
   await seedInvestmentProducts();
+
+  console.log('Seeding admin accounts...');
+  await seedAdmins();
+
+  console.log('Seeding education section cards...');
+  await seedEducationContent();
 
   console.log('\n✅ All content seeded successfully!');
   process.exit(0);

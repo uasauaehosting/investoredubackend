@@ -604,6 +604,25 @@ class PrincipleModel {
     }
 }
 exports.PrincipleModel = PrincipleModel;
+function mapInvestmentProductRow(result) {
+    return {
+        id: result.id,
+        title: result.title,
+        description: result.description,
+        author: result.author,
+        date: result.date,
+        fileUrl: result.file_url,
+        imageUrl: result.image_url,
+        content: result.content,
+        authorityId: result.authority_id,
+        categoryId: result.category_id,
+        views: result.views,
+        downloads: result.downloads,
+        isActive: result.is_active,
+        createdAt: result.created_at,
+        updatedAt: result.updated_at,
+    };
+}
 class InvestmentProductModel {
     static async create(productData) {
         const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = productData;
@@ -638,23 +657,15 @@ class InvestmentProductModel {
         const query = 'SELECT * FROM investment_products WHERE id = ? AND is_active = true';
         const result = await (0, database_1.executeSingleQuery)(query, [id]);
         if (result) {
-            return {
-                id: result.id,
-                title: result.title,
-                description: result.description,
-                author: result.author,
-                date: result.date,
-                fileUrl: result.file_url,
-                imageUrl: result.image_url,
-                content: result.content,
-                authorityId: result.authority_id,
-                categoryId: result.category_id,
-                views: result.views,
-                downloads: result.downloads,
-                isActive: result.is_active,
-                createdAt: result.created_at,
-                updatedAt: result.updated_at
-            };
+            return mapInvestmentProductRow(result);
+        }
+        return null;
+    }
+    static async findBySlug(slug) {
+        const query = 'SELECT * FROM investment_products WHERE slug = ? AND is_active = true';
+        const result = await (0, database_1.executeSingleQuery)(query, [slug]);
+        if (result) {
+            return { ...mapInvestmentProductRow(result), slug: result.slug };
         }
         return null;
     }
@@ -851,11 +862,12 @@ class MemberStrategyProjectModel {
     }
     static async findAll() {
         const query = `
-      SELECT msp.*, m.name as memberName 
+      SELECT msp.*, m.name as memberName, c.name as categoryName
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
+      LEFT JOIN categories c ON msp.category_id = c.id
       WHERE msp.is_active = true 
-      ORDER BY msp.start_date DESC
+      ORDER BY COALESCE(msp.date, msp.start_date) DESC
     `;
         const results = await (0, database_1.executeQuery)(query);
         return results.map(result => ({
@@ -865,19 +877,19 @@ class MemberStrategyProjectModel {
             memberId: result.member_id,
             type: result.type,
             status: result.status,
-            start_date: result.start_date,
+            start_date: result.start_date || result.date,
             end_date: result.end_date,
             budget: result.budget,
             isActive: result.is_active,
             createdAt: result.created_at,
             updatedAt: result.updated_at,
             memberName: result.memberName,
-            categoryName: null,
-            categoryId: null,
-            date: result.start_date,
-            fileUrl: '',
-            views: 0,
-            downloads: 0
+            categoryName: result.categoryName,
+            categoryId: result.category_id ?? null,
+            date: result.date || result.start_date,
+            fileUrl: result.file_url || '',
+            views: result.views ?? 0,
+            downloads: result.downloads ?? 0
         }));
     }
     static async findById(id) {
