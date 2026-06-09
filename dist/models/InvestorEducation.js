@@ -493,9 +493,17 @@ class PrincipleModel {
         return await (0, database_1.executeInsert)(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC';
+        const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
-        return results.map(result => ({
+        return results.map((result) => PrincipleModel.mapPrincipleRow(result));
+    }
+    static async findAllAdmin() {
+        const query = 'SELECT * FROM principles ORDER BY date DESC, id DESC';
+        const results = await (0, database_1.executeQuery)(query);
+        return results.map((result) => PrincipleModel.mapPrincipleRow(result));
+    }
+    static mapPrincipleRow(result) {
+        return {
             id: result.id,
             title: result.title,
             description: result.description,
@@ -510,32 +518,13 @@ class PrincipleModel {
             downloads: result.downloads,
             isActive: result.is_active,
             createdAt: result.created_at,
-            updatedAt: result.updated_at
-        }));
+            updatedAt: result.updated_at,
+        };
     }
     static async findById(id) {
         const query = 'SELECT * FROM principles WHERE id = ? AND is_active = true';
         const result = await (0, database_1.executeSingleQuery)(query, [id]);
-        if (result) {
-            return {
-                id: result.id,
-                title: result.title,
-                description: result.description,
-                author: result.author,
-                date: result.date,
-                fileUrl: result.file_url,
-                imageUrl: result.image_url,
-                content: result.content,
-                authorityId: result.authority_id,
-                categoryId: result.category_id,
-                views: result.views,
-                downloads: result.downloads,
-                isActive: result.is_active,
-                createdAt: result.created_at,
-                updatedAt: result.updated_at
-            };
-        }
-        return null;
+        return result ? PrincipleModel.mapPrincipleRow(result) : null;
     }
     static async update(id, updateData) {
         const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;

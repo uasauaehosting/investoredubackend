@@ -9,31 +9,18 @@ const axios_1 = __importDefault(require("axios"));
 const database_1 = require("../utils/database");
 const ftp_1 = require("../utils/ftp");
 const FTP_BASE = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
-const REWRITE_RULES = [
-    { pattern: /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i, label: 'uasa.ae/galorg' },
-    { pattern: /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i, label: 'uasa.ae/galimg' },
-    { pattern: /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i, label: 'investoreducation.uasa.ae/uploads' },
-    { pattern: /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/(.+)$/i, label: 'ahwuae.com/investoredu/uploads' },
-    { pattern: /^https?:\/\/[^/]+\/uploads\/(.+)$/i, label: 'legacy /uploads' },
-];
+const URL_COLUMN_NAMES = ['image_url', 'file_url', 'image', 'thumbnail_url', 'cover_image'];
 function extractFilename(urlPath) {
-    return decodeURIComponent(urlPath.split('/').pop() || urlPath);
+    return decodeURIComponent(urlPath.split('?')[0].split('/').pop() || urlPath);
 }
 function rewriteToFtpUrl(oldUrl) {
-    if (!oldUrl || !FTP_BASE)
+    const next = (0, ftp_1.normalizeMediaUrl)(oldUrl);
+    if (!next || next === oldUrl.trim())
         return null;
-    const normalized = oldUrl.trim();
-    if (normalized.startsWith(FTP_BASE + '/')) {
-        return normalized.replace(/^http:\/\//i, 'https://');
-    }
-    for (const { pattern } of REWRITE_RULES) {
-        const match = normalized.match(pattern);
-        if (match) {
-            const filename = extractFilename(match[1]);
-            return `${FTP_BASE}/${filename}`;
-        }
-    }
-    return null;
+    return next;
+}
+function isBrokenCdnUrl(url) {
+    return /ahwuae\.com\/investoredu\/uploads\//i.test(url);
 }
 function shouldMirrorToFtp(url) {
     return /\.(jpe?g|png|gif|webp|svg|pdf)(\?|$)/i.test(url) || /uasa\.ae\/en\/gal(img|org)\//i.test(url);
@@ -77,25 +64,26 @@ function rewriteJsonValue(value, changes) {
     }
     return value;
 }
-async function updateImageColumns(mirrored) {
+async function updateUrlColumns(mirrored) {
+    const placeholders = URL_COLUMN_NAMES.map(() => '?').join(', ');
     const columns = await (0, database_1.executeQuery)(`SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS
-     WHERE TABLE_SCHEMA = ? AND COLUMN_NAME = 'image_url'
-     ORDER BY TABLE_NAME`, [process.env.DB_NAME]);
+     WHERE TABLE_SCHEMA = ? AND COLUMN_NAME IN (${placeholders})
+     ORDER BY TABLE_NAME, COLUMN_NAME`, [process.env.DB_NAME, ...URL_COLUMN_NAMES]);
     let updated = 0;
     for (const { TABLE_NAME, COLUMN_NAME } of columns) {
-        const rows = await (0, database_1.executeQuery)(`SELECT id, \`${COLUMN_NAME}\` AS image_url FROM \`${TABLE_NAME}\`
+        const rows = await (0, database_1.executeQuery)(`SELECT id, \`${COLUMN_NAME}\` AS url_value FROM \`${TABLE_NAME}\`
        WHERE \`${COLUMN_NAME}\` IS NOT NULL AND \`${COLUMN_NAME}\` != ''`);
         for (const row of rows) {
-            const newUrl = rewriteToFtpUrl(row.image_url);
-            if (!newUrl || newUrl === row.image_url)
+            const newUrl = rewriteToFtpUrl(row.url_value);
+            if (!newUrl || newUrl === row.url_value)
                 continue;
             const filename = extractFilename(newUrl);
-            if (shouldMirrorToFtp(row.image_url)) {
-                await mirrorFile(row.image_url, filename, mirrored);
+            if (shouldMirrorToFtp(row.url_value) && !isBrokenCdnUrl(row.url_value)) {
+                await mirrorFile(row.url_value, filename, mirrored);
             }
             await (0, database_1.executeUpdate)(`UPDATE \`${TABLE_NAME}\` SET \`${COLUMN_NAME}\` = ? WHERE id = ?`, [newUrl, row.id]);
-            console.log(`[${TABLE_NAME}] #${row.id}`);
-            console.log(`  ${row.image_url}`);
+            console.log(`[${TABLE_NAME}.${COLUMN_NAME}] #${row.id}`);
+            console.log(`  ${row.url_value}`);
             console.log(`  -> ${newUrl}`);
             updated++;
         }
@@ -125,7 +113,7 @@ async function updateSiteContent(mirrored) {
         if (!changes.length)
             continue;
         for (const change of changes) {
-            if (shouldMirrorToFtp(change.from)) {
+            if (shouldMirrorToFtp(change.from) && !isBrokenCdnUrl(change.from)) {
                 const filename = extractFilename(change.to);
                 await mirrorFile(change.from, filename, mirrored);
             }
@@ -148,11 +136,11 @@ async function main() {
     console.log(`FTP base URL: ${FTP_BASE}\n`);
     await (0, database_1.initConnection)();
     const mirrored = new Map();
-    const columnUpdates = await updateImageColumns(mirrored);
+    const columnUpdates = await updateUrlColumns(mirrored);
     const mediaUpdates = await updateMediaUploads(mirrored);
     const siteUpdates = await updateSiteContent(mirrored);
     console.log('\n=== Summary ===');
-    console.log(`image_url columns updated: ${columnUpdates}`);
+    console.log(`url columns updated: ${columnUpdates}`);
     console.log(`media_uploads updated: ${mediaUpdates}`);
     console.log(`site_content blocks updated: ${siteUpdates}`);
     console.log(`files mirrored to FTP: ${[...mirrored.values()].filter(Boolean).length}`);

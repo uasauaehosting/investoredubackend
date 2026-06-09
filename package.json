@@ -12,6 +12,7 @@
     "verify-db": "ts-node src/scripts/verify-database.ts",
     "verify-ftp": "ts-node src/scripts/verify-ftp.ts",
     "update-image-urls": "ts-node src/scripts/update-image-urls-ftp.ts",
+    "fix-upload-urls": "ts-node src/scripts/fix-remaining-upload-urls.ts",
     "migrate": "ts-node src/scripts/run-migrations.ts",
     "postinstall": "npm run build"
   },

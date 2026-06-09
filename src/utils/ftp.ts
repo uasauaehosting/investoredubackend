@@ -23,6 +23,18 @@ export function isFtpConfigured(): boolean {
   );
 }
 
+const LEGACY_FTP_REMOTE_PATH =
+  '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads';
+
+function normalizeRemotePath(remotePath: string): string {
+  return remotePath.replace(/\\/g, '/');
+}
+
+function getDownloadRemotePaths(primaryPath: string): string[] {
+  const legacy = process.env.FTP_LEGACY_REMOTE_PATH || LEGACY_FTP_REMOTE_PATH;
+  return [...new Set([primaryPath, legacy].map(normalizeRemotePath))];
+}
+
 export function getFtpConfig(): FtpConfig {
   const host = process.env.FTP_HOST;
   const user = process.env.FTP_USER;
@@ -39,7 +51,7 @@ export function getFtpConfig(): FtpConfig {
     password,
     port: parseInt(process.env.FTP_PORT || '21', 10),
     secure: process.env.FTP_SECURE === 'true',
-    remotePath: process.env.FTP_REMOTE_PATH || '/public_html/uploads',
+    remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || '/investoredu/uploads'),
     publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
   };
 }
@@ -50,6 +62,40 @@ export function getPublicUploadUrl(filename: string): string {
     throw new Error('FTP_PUBLIC_BASE_URL is not configured.');
   }
   return `${base}/${filename}`;
+}
+
+const MEDIA_URL_REWRITE_RULES: RegExp[] = [
+  /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i,
+  /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i,
+  /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i,
+  /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/(.+)$/i,
+  /^https?:\/\/[^/]+\/uploads\/(.+)$/i,
+];
+
+function extractFilenameFromUrlPath(urlPath: string): string {
+  return decodeURIComponent(urlPath.split('?')[0].split('/').pop() || urlPath);
+}
+
+/** Normalize legacy upload URLs to the configured public uploads base URL. */
+export function normalizeMediaUrl(oldUrl: string | null | undefined): string | null {
+  if (!oldUrl) return null;
+
+  const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  if (!base) return oldUrl.trim();
+
+  const normalized = oldUrl.trim();
+  if (normalized.startsWith(base + '/')) {
+    return normalized.replace(/^http:\/\//i, 'https://');
+  }
+
+  for (const pattern of MEDIA_URL_REWRITE_RULES) {
+    const match = normalized.match(pattern);
+    if (match) {
+      return `${base}/${extractFilenameFromUrlPath(match[1])}`;
+    }
+  }
+
+  return normalized;
 }
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -84,11 +130,9 @@ export async function uploadToFtp(buffer: Buffer, filename: string): Promise<str
       secure: config.secure,
     });
 
-    const remoteDir = config.remotePath.replace(/\\/g, '/');
+    const remoteDir = normalizeRemotePath(config.remotePath);
     await client.ensureDir(remoteDir);
-
-    const remoteFile = path.posix.join(remoteDir, filename);
-    await client.uploadFrom(Readable.from(buffer), remoteFile);
+    await client.uploadFrom(Readable.from(buffer), path.posix.join(remoteDir, filename));
 
     return getPublicUploadUrl(filename);
   } finally {
@@ -113,13 +157,22 @@ export async function downloadFromFtp(filename: string): Promise<Buffer> {
       secure: config.secure,
     });
 
-    const remoteDir = config.remotePath.replace(/\\/g, '/');
-    const remoteFile = path.posix.join(remoteDir, filename);
+    const remoteDirs = getDownloadRemotePaths(config.remotePath);
     const tmpPath = path.join(os.tmpdir(), `ftp-dl-${Date.now()}-${filename}`);
+    let lastError: Error | undefined;
 
     try {
-      await client.downloadTo(tmpPath, remoteFile);
-      return fs.readFileSync(tmpPath);
+      for (const remoteDir of remoteDirs) {
+        const remoteFile = path.posix.join(remoteDir, filename);
+        try {
+          await client.downloadTo(tmpPath, remoteFile);
+          return fs.readFileSync(tmpPath);
+        } catch (error: any) {
+          lastError = error;
+        }
+      }
+
+      throw lastError || new Error(`File not found: ${filename}`);
     } finally {
       if (fs.existsSync(tmpPath)) {
         fs.unlinkSync(tmpPath);

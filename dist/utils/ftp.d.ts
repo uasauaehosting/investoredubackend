@@ -10,6 +10,7 @@ export interface FtpConfig {
 export declare function isFtpConfigured(): boolean;
 export declare function getFtpConfig(): FtpConfig;
 export declare function getPublicUploadUrl(filename: string): string;
+export declare function normalizeMediaUrl(oldUrl: string | null | undefined): string | null;
 export declare function getMimeTypeForFilename(filename: string): string;
 export declare function isSafeUploadFilename(filename: string): boolean;
 export declare function uploadToFtp(buffer: Buffer, filename: string): Promise<string>;

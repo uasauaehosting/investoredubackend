@@ -1,0 +1,48 @@
+import 'dotenv/config';
+import { initConnection, executeQuery, executeUpdate } from '../utils/database';
+import { normalizeMediaUrl } from '../utils/ftp';
+
+const URL_COLUMNS = ['image_url', 'file_url', 'image', 'thumbnail_url', 'cover_image'];
+const OLD_PATTERN = '%ahwuae.com/investoredu/uploads%';
+
+async function main() {
+  await initConnection();
+
+  const placeholders = URL_COLUMNS.map(() => '?').join(', ');
+  const columns = await executeQuery<{ TABLE_NAME: string; COLUMN_NAME: string }>(
+    `SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = ? AND COLUMN_NAME IN (${placeholders})`,
+    [process.env.DB_NAME, ...URL_COLUMNS]
+  );
+
+  let updated = 0;
+
+  for (const { TABLE_NAME, COLUMN_NAME } of columns) {
+    const rows = await executeQuery<{ id: number; val: string }>(
+      `SELECT id, \`${COLUMN_NAME}\` AS val FROM \`${TABLE_NAME}\`
+       WHERE \`${COLUMN_NAME}\` LIKE ?`,
+      [OLD_PATTERN]
+    );
+
+    for (const row of rows) {
+      const next = normalizeMediaUrl(row.val);
+      if (!next || next === row.val) continue;
+
+      await executeUpdate(
+        `UPDATE \`${TABLE_NAME}\` SET \`${COLUMN_NAME}\` = ? WHERE id = ?`,
+        [next, row.id]
+      );
+      console.log(`[${TABLE_NAME}.${COLUMN_NAME}] #${row.id}`);
+      console.log(`  ${row.val}`);
+      console.log(`  -> ${next}`);
+      updated++;
+    }
+  }
+
+  console.log(`\nUpdated ${updated} row(s)`);
+}
+
+main().catch((error) => {
+  console.error(error.message);
+  process.exit(1);
+});

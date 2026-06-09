@@ -13,6 +13,7 @@ const MIGRATION_FILES = [
   'create_global_policy_areas_table.sql',
   'create_cms_tables.sql',
   'create_slides_table.sql',
+  'create_principles_table.sql',
 ];
 
 function splitStatements(sql: string): string[] {

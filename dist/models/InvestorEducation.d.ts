@@ -170,6 +170,8 @@ export declare class FrameworkModel {
 export declare class PrincipleModel {
     static create(principleData: Omit<IPrinciple, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;
     static findAll(): Promise<IPrinciple[]>;
+    static findAllAdmin(): Promise<IPrinciple[]>;
+    private static mapPrincipleRow;
     static findById(id: number): Promise<IPrinciple | null>;
     static update(id: number, updateData: Partial<IPrinciple>): Promise<boolean>;
     static delete(id: number): Promise<boolean>;

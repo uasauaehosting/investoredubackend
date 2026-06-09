@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.isFtpConfigured = isFtpConfigured;
 exports.getFtpConfig = getFtpConfig;
 exports.getPublicUploadUrl = getPublicUploadUrl;
+exports.normalizeMediaUrl = normalizeMediaUrl;
 exports.getMimeTypeForFilename = getMimeTypeForFilename;
 exports.isSafeUploadFilename = isSafeUploadFilename;
 exports.uploadToFtp = uploadToFtp;
@@ -21,6 +22,14 @@ function isFtpConfigured() {
         process.env.FTP_PASSWORD &&
         process.env.FTP_PUBLIC_BASE_URL);
 }
+const LEGACY_FTP_REMOTE_PATH = '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads';
+function normalizeRemotePath(remotePath) {
+    return remotePath.replace(/\\/g, '/');
+}
+function getDownloadRemotePaths(primaryPath) {
+    const legacy = process.env.FTP_LEGACY_REMOTE_PATH || LEGACY_FTP_REMOTE_PATH;
+    return [...new Set([primaryPath, legacy].map(normalizeRemotePath))];
+}
 function getFtpConfig() {
     const host = process.env.FTP_HOST;
     const user = process.env.FTP_USER;
@@ -35,7 +44,7 @@ function getFtpConfig() {
         password,
         port: parseInt(process.env.FTP_PORT || '21', 10),
         secure: process.env.FTP_SECURE === 'true',
-        remotePath: process.env.FTP_REMOTE_PATH || '/public_html/uploads',
+        remotePath: normalizeRemotePath(process.env.FTP_REMOTE_PATH || '/investoredu/uploads'),
         publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
     };
 }
@@ -45,6 +54,34 @@ function getPublicUploadUrl(filename) {
         throw new Error('FTP_PUBLIC_BASE_URL is not configured.');
     }
     return `${base}/${filename}`;
+}
+const MEDIA_URL_REWRITE_RULES = [
+    /^https?:\/\/uasa\.ae\/en\/galorg\/(.+)$/i,
+    /^https?:\/\/uasa\.ae\/en\/galimg\/(.+)$/i,
+    /^https?:\/\/investoreducation\.uasa\.ae\/uploads\/(.+)$/i,
+    /^https?:\/\/ahwuae\.com\/investoredu\/uploads\/(.+)$/i,
+    /^https?:\/\/[^/]+\/uploads\/(.+)$/i,
+];
+function extractFilenameFromUrlPath(urlPath) {
+    return decodeURIComponent(urlPath.split('?')[0].split('/').pop() || urlPath);
+}
+function normalizeMediaUrl(oldUrl) {
+    if (!oldUrl)
+        return null;
+    const base = (process.env.FTP_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+    if (!base)
+        return oldUrl.trim();
+    const normalized = oldUrl.trim();
+    if (normalized.startsWith(base + '/')) {
+        return normalized.replace(/^http:\/\//i, 'https://');
+    }
+    for (const pattern of MEDIA_URL_REWRITE_RULES) {
+        const match = normalized.match(pattern);
+        if (match) {
+            return `${base}/${extractFilenameFromUrlPath(match[1])}`;
+        }
+    }
+    return normalized;
 }
 const MIME_BY_EXT = {
     '.jpg': 'image/jpeg',
@@ -73,10 +110,9 @@ async function uploadToFtp(buffer, filename) {
             port: config.port,
             secure: config.secure,
         });
-        const remoteDir = config.remotePath.replace(/\\/g, '/');
+        const remoteDir = normalizeRemotePath(config.remotePath);
         await client.ensureDir(remoteDir);
-        const remoteFile = path_1.default.posix.join(remoteDir, filename);
-        await client.uploadFrom(stream_1.Readable.from(buffer), remoteFile);
+        await client.uploadFrom(stream_1.Readable.from(buffer), path_1.default.posix.join(remoteDir, filename));
         return getPublicUploadUrl(filename);
     }
     finally {
@@ -97,12 +133,21 @@ async function downloadFromFtp(filename) {
             port: config.port,
             secure: config.secure,
         });
-        const remoteDir = config.remotePath.replace(/\\/g, '/');
-        const remoteFile = path_1.default.posix.join(remoteDir, filename);
+        const remoteDirs = getDownloadRemotePaths(config.remotePath);
         const tmpPath = path_1.default.join(os_1.default.tmpdir(), `ftp-dl-${Date.now()}-${filename}`);
+        let lastError;
         try {
-            await client.downloadTo(tmpPath, remoteFile);
-            return fs_1.default.readFileSync(tmpPath);
+            for (const remoteDir of remoteDirs) {
+                const remoteFile = path_1.default.posix.join(remoteDir, filename);
+                try {
+                    await client.downloadTo(tmpPath, remoteFile);
+                    return fs_1.default.readFileSync(tmpPath);
+                }
+                catch (error) {
+                    lastError = error;
+                }
+            }
+            throw lastError || new Error(`File not found: ${filename}`);
         }
         finally {
             if (fs_1.default.existsSync(tmpPath)) {

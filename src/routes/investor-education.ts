@@ -451,6 +451,15 @@ router.get('/principles', async (req: any, res: any) => {
   }
 });
 
+router.get('/principles/admin', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req: any, res: any) => {
+  try {
+    const principles = await PrincipleModel.findAllAdmin();
+    res.json(principles);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.get('/principles/:id', async (req: any, res: any) => {
   try {
     const principleId = parseInt(req.params.id);

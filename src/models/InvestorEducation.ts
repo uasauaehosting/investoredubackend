@@ -673,9 +673,19 @@ export class PrincipleModel {
   }
 
   static async findAll(): Promise<IPrinciple[]> {
-    const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC';
+    const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC, id DESC';
     const results = await executeQuery<any>(query);
-    return results.map(result => ({
+    return results.map((result) => PrincipleModel.mapPrincipleRow(result));
+  }
+
+  static async findAllAdmin(): Promise<IPrinciple[]> {
+    const query = 'SELECT * FROM principles ORDER BY date DESC, id DESC';
+    const results = await executeQuery<any>(query);
+    return results.map((result) => PrincipleModel.mapPrincipleRow(result));
+  }
+
+  private static mapPrincipleRow(result: any): IPrinciple {
+    return {
       id: result.id,
       title: result.title,
       description: result.description,
@@ -690,33 +700,14 @@ export class PrincipleModel {
       downloads: result.downloads,
       isActive: result.is_active,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
-    }));
+      updatedAt: result.updated_at,
+    };
   }
 
   static async findById(id: number): Promise<IPrinciple | null> {
     const query = 'SELECT * FROM principles WHERE id = ? AND is_active = true';
     const result = await executeSingleQuery<any>(query, [id]);
-    if (result) {
-      return {
-        id: result.id,
-        title: result.title,
-        description: result.description,
-        author: result.author,
-        date: result.date,
-        fileUrl: result.file_url,
-        imageUrl: result.image_url,
-        content: result.content,
-        authorityId: result.authority_id,
-        categoryId: result.category_id,
-        views: result.views,
-        downloads: result.downloads,
-        isActive: result.is_active,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at
-      };
-    }
-    return null;
+    return result ? PrincipleModel.mapPrincipleRow(result) : null;
   }
 
   static async update(id: number, updateData: Partial<IPrinciple>): Promise<boolean> {

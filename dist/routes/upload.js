@@ -73,18 +73,19 @@ router.post('/', auth_1.authenticate, (req, res, next) => {
             fileUrl = `${req.protocol}://${req.get('host')}/uploads/${filename}`;
             storageType = 'local';
         }
+        const publicUrl = (0, ftp_1.normalizeMediaUrl)(fileUrl) || fileUrl;
         const uploadId = await MediaUpload_1.MediaUploadModel.create({
             filename,
             originalName: req.file.originalname,
             mimeType: req.file.mimetype,
-            fileUrl,
+            fileUrl: publicUrl,
             storageType,
             fileSize: req.file.size,
             uploadedBy: req.admin?.id,
         });
         res.json({
             message: 'File uploaded successfully',
-            url: fileUrl,
+            url: publicUrl,
             filename,
             storageType,
             id: uploadId,

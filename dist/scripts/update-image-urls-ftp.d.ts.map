@@ -1,1 +1,1 @@
-{"version":3,"file":"update-image-urls-ftp.d.ts","sourceRoot":"","sources":["../../src/scripts/update-image-urls-ftp.ts"],"names":[],"mappings":"AAIA,OAAO,eAAe,CAAC;AAoBvB,wBAAgB,eAAe,CAAC,MAAM,EAAE,MAAM,GAAG,MAAM,GAAG,IAAI,CAiB7D"}
+{"version":3,"file":"update-image-urls-ftp.d.ts","sourceRoot":"","sources":["../../src/scripts/update-image-urls-ftp.ts"],"names":[],"mappings":"AAIA,OAAO,eAAe,CAAC;AAcvB,wBAAgB,eAAe,CAAC,MAAM,EAAE,MAAM,GAAG,MAAM,GAAG,IAAI,CAI7D"}
