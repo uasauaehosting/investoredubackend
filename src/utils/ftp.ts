@@ -94,16 +94,44 @@ export function getFtpConfig(): FtpConfig {
   };
 }
 
-function getDirectUploadPath(): string | null {
-  const configured = process.env.UPLOAD_DIRECT_PATH?.trim();
-  if (!configured) return null;
-  return path.resolve(configured);
+function getDirectUploadCandidates(): string[] {
+  const candidates = [
+    process.env.UPLOAD_DIRECT_PATH?.trim(),
+    '/home/u827794112/investoredu/uploads',
+    '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
+  ].filter(Boolean) as string[];
+
+  return [...new Set(candidates.map((dir) => path.resolve(dir)))];
+}
+
+function getFtpUploadCandidates(): string[] {
+  return [...new Set([resolveRemotePath(), DEFAULT_FTP_REMOTE_PATH, ...LEGACY_FTP_REMOTE_PATHS].map(normalizeRemotePath))];
+}
+
+async function writeDirectUpload(buffer: Buffer, filename: string, dir: string): Promise<void> {
+  fs.mkdirSync(dir, { recursive: true });
+  const target = path.join(dir, filename);
+  fs.writeFileSync(target, buffer);
+  const written = fs.statSync(target).size;
+  if (written !== buffer.length) {
+    fs.unlinkSync(target);
+    throw new Error(`Direct write size mismatch (expected ${buffer.length}, got ${written})`);
+  }
+}
+
+async function verifyFtpRoundtrip(buffer: Buffer, filename: string): Promise<void> {
+  const downloaded = await downloadFromFtp(filename);
+  if (downloaded.length !== buffer.length) {
+    throw new Error(
+      `FTP roundtrip failed for ${filename} (expected ${buffer.length}, got ${downloaded.length})`
+    );
+  }
 }
 
 /** Verify the uploaded file is reachable at its public URL (Hostinger CDN). */
 export async function verifyPublicUploadReachable(filename: string): Promise<boolean> {
   const url = getPublicUploadUrl(filename);
-  const attempts = [0, 1500, 3000];
+  const attempts = [0, 2000, 5000, 8000];
 
   for (const delayMs of attempts) {
     if (delayMs > 0) {
@@ -186,9 +214,10 @@ export function isSafeUploadFilename(filename: string): boolean {
   return /^[a-zA-Z0-9._-]+$/.test(filename) && !filename.includes('..');
 }
 
-export async function uploadToFtp(buffer: Buffer, filename: string): Promise<string> {
+export async function uploadToFtp(buffer: Buffer, filename: string, remoteDir?: string): Promise<string> {
   const config = getFtpConfig();
-  const client = new Client(30000);
+  const client = new Client(60000);
+  const targetDir = normalizeRemotePath(remoteDir || config.remotePath);
 
   try {
     await client.access({
@@ -199,9 +228,8 @@ export async function uploadToFtp(buffer: Buffer, filename: string): Promise<str
       secure: config.secure,
     });
 
-    const remoteDir = normalizeRemotePath(config.remotePath);
-    await client.ensureDir(remoteDir);
-    const remoteFile = path.posix.join(remoteDir, filename);
+    await client.ensureDir(targetDir);
+    const remoteFile = path.posix.join(targetDir, filename);
     await client.uploadFrom(Readable.from(buffer), remoteFile);
 
     const uploadedSize = await client.size(remoteFile).catch(() => -1);
@@ -217,26 +245,46 @@ export async function uploadToFtp(buffer: Buffer, filename: string): Promise<str
   }
 }
 
-/** Upload via direct filesystem (Hostinger colocated API) or FTP, then verify public URL. */
+/** Upload via direct filesystem and/or FTP; confirm file is stored correctly. */
 export async function uploadMediaFile(buffer: Buffer, filename: string): Promise<string> {
-  const directPath = getDirectUploadPath();
-  if (directPath) {
-    fs.mkdirSync(directPath, { recursive: true });
-    fs.writeFileSync(path.join(directPath, filename), buffer);
-  } else {
-    await uploadToFtp(buffer, filename);
-  }
-
   const publicUrl = getPublicUploadUrl(filename);
-  const reachable = await verifyPublicUploadReachable(filename);
-  if (!reachable) {
-    throw new Error(
-      `Upload saved but file is not reachable at ${publicUrl}. ` +
-        `Use FTP_REMOTE_PATH=${DEFAULT_FTP_REMOTE_PATH} or set UPLOAD_DIRECT_PATH on the server.`
-    );
+  const failures: string[] = [];
+
+  for (const dir of getDirectUploadCandidates()) {
+    try {
+      await writeDirectUpload(buffer, filename, dir);
+      if (await verifyPublicUploadReachable(filename)) {
+        return publicUrl;
+      }
+      failures.push(`direct ${dir}: stored but public URL not reachable yet`);
+    } catch (error: any) {
+      failures.push(`direct ${dir}: ${error.message}`);
+    }
   }
 
-  return publicUrl;
+  for (const remoteDir of getFtpUploadCandidates()) {
+    try {
+      await uploadToFtp(buffer, filename, remoteDir);
+      await verifyFtpRoundtrip(buffer, filename);
+
+      if (await verifyPublicUploadReachable(filename)) {
+        return publicUrl;
+      }
+
+      // FTP storage confirmed; CDN may lag or block server-side checks.
+      console.warn(
+        `Upload stored at FTP ${remoteDir}/${filename} but public URL check failed; returning URL anyway`
+      );
+      return publicUrl;
+    } catch (error: any) {
+      failures.push(`ftp ${remoteDir}: ${error.message}`);
+    }
+  }
+
+  throw new Error(
+    `Upload failed for ${filename}. ${failures.join(' | ')}. ` +
+      `Set FTP_REMOTE_PATH=${DEFAULT_FTP_REMOTE_PATH} or UPLOAD_DIRECT_PATH on the server.`
+  );
 }
 
 export async function downloadFromFtp(filename: string): Promise<Buffer> {
