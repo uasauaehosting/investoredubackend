@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "seed": "ts-node src/scripts/seed-all-content.ts",
     "verify-db": "ts-node src/scripts/verify-database.ts",
+    "verify-ftp": "ts-node src/scripts/verify-ftp.ts",
+    "update-image-urls": "ts-node src/scripts/update-image-urls-ftp.ts",
     "migrate": "ts-node src/scripts/run-migrations.ts",
     "postinstall": "npm run build"
   },
