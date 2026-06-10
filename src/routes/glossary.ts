@@ -15,9 +15,9 @@ router.get('/', async (req: any, res: any) => {
 });
 
 router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('term').notEmpty().withMessage('Term is required'),
-  body('definition').notEmpty().withMessage('Definition is required'),
-  body('language').isIn(['English', 'Arabic', 'French']).withMessage('Invalid language')
+  body('term').optional({ values: 'falsy' }),
+  body('definition').optional({ values: 'falsy' }),
+  body('language').optional().isIn(['English', 'Arabic', 'French']).withMessage('Invalid language'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);

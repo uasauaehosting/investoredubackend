@@ -6,10 +6,10 @@ import { authenticate, authorize } from '../middleware/auth';
 const router = express.Router();
 
 router.post('/', [
-  body('name').notEmpty().withMessage('Name is required'),
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('subject').notEmpty().withMessage('Subject is required'),
-  body('message').notEmpty().withMessage('Message is required')
+  body('name').optional({ values: 'falsy' }),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
+  body('subject').optional({ values: 'falsy' }),
+  body('message').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -83,7 +83,7 @@ router.get('/:id', authenticate, authorize('Super Admin', 'Admin'), async (req, 
 });
 
 router.put('/:id/respond', authenticate, authorize('Super Admin', 'Admin'), [
-  body('response').notEmpty().withMessage('Response is required')
+  body('response').optional({ values: 'falsy' }),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

@@ -15,9 +15,9 @@ router.get('/sections', async (req: any, res: any) => {
 });
 
 router.post('/sections', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('content').notEmpty().withMessage('Content is required'),
-  body('order').isInt({ min: 0 }).withMessage('Order must be a non-negative integer')
+  body('title').optional({ values: 'falsy' }),
+  body('content').optional({ values: 'falsy' }),
+  body('order').optional().isInt({ min: 0 }).withMessage('Order must be a non-negative integer'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -70,9 +70,9 @@ router.get('/contact', async (req: any, res: any) => {
 });
 
 router.post('/contact', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('type').isIn(['headquarters', 'contact']).withMessage('Invalid type'),
-  body('address').optional().notEmpty().withMessage('Address cannot be empty'),
-  body('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
+  body('type').optional().isIn(['headquarters', 'contact']).withMessage('Invalid type'),
+  body('address').optional({ values: 'falsy' }),
+  body('phone').optional({ values: 'falsy' }),
   body('email').optional().isEmail().withMessage('Invalid email format')
 ], async (req: any, res: any) => {
   try {

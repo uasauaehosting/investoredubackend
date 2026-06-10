@@ -174,14 +174,6 @@ router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), asyn
   try {
     const programData = req.body;
     
-    // Validate required fields
-    if (!programData.member_name) {
-      return res.status(400).json({
-        success: false,
-        message: 'Member name is required'
-      });
-    }
-
     const newProgram = await ProgramsModel.create(programData);
     
     res.status(201).json({

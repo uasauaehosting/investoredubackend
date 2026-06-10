@@ -15,8 +15,8 @@ router.get('/slides', async (req: any, res: any) => {
 });
 
 router.post('/slides', authenticate, authorize('Super Admin', 'Admin'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('display_order').isNumeric().withMessage('Display order must be a number')
+  body('title').optional({ values: 'falsy' }),
+  body('display_order').optional().isNumeric().withMessage('Display order must be a number'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -33,7 +33,7 @@ router.post('/slides', authenticate, authorize('Super Admin', 'Admin'), [
 });
 
 router.put('/slides/:id', authenticate, authorize('Super Admin', 'Admin'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty')
+  body('title').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -75,8 +75,8 @@ router.get('/news', async (req: any, res: any) => {
 });
 
 router.post('/news', authenticate, authorize('Super Admin', 'Admin'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('excerpt').notEmpty().withMessage('Excerpt is required')
+  body('title').optional({ values: 'falsy' }),
+  body('excerpt').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     console.log('POST /news - Request body:', req.body); // Debug log
@@ -101,8 +101,8 @@ router.post('/news', authenticate, authorize('Super Admin', 'Admin'), [
 });
 
 router.put('/news/:id', authenticate, authorize('Super Admin', 'Admin'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('excerpt').optional().notEmpty().withMessage('Excerpt cannot be empty')
+  body('title').optional({ values: 'falsy' }),
+  body('excerpt').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     console.log('PUT /news/:id - Request body:', req.body); // Debug log
@@ -153,8 +153,8 @@ router.get('/members', async (req: any, res: any) => {
 });
 
 router.post('/members', authenticate, authorize('Super Admin', 'Admin'), [
-  body('name').notEmpty().withMessage('Name is required'),
-  body('country').notEmpty().withMessage('Country is required')
+  body('name').optional({ values: 'falsy' }),
+  body('country').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -177,8 +177,8 @@ router.post('/members', authenticate, authorize('Super Admin', 'Admin'), [
 });
 
 router.put('/members/:id', authenticate, authorize('Super Admin', 'Admin'), [
-  body('name').optional().notEmpty().withMessage('Name cannot be empty'),
-  body('country').optional().notEmpty().withMessage('Country cannot be empty')
+  body('name').optional({ values: 'falsy' }),
+  body('country').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -228,9 +228,9 @@ router.get('/stats', async (req: any, res: any) => {
 });
 
 router.post('/stats', authenticate, authorize('Super Admin', 'Admin'), [
-  body('readingMaterials').notEmpty().withMessage('Reading materials count is required'),
-  body('membersActivities').notEmpty().withMessage('Members activities count is required'),
-  body('alertsBulletins').notEmpty().withMessage('Alerts bulletins count is required')
+  body('readingMaterials').optional({ values: 'falsy' }),
+  body('membersActivities').optional({ values: 'falsy' }),
+  body('alertsBulletins').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -247,9 +247,9 @@ router.post('/stats', authenticate, authorize('Super Admin', 'Admin'), [
 });
 
 router.put('/stats/:id', authenticate, authorize('Super Admin', 'Admin'), [
-  body('readingMaterials').optional().notEmpty().withMessage('Reading materials count cannot be empty'),
-  body('membersActivities').optional().notEmpty().withMessage('Members activities count cannot be empty'),
-  body('alertsBulletins').optional().notEmpty().withMessage('Alerts bulletins count cannot be empty')
+  body('readingMaterials').optional({ values: 'falsy' }),
+  body('membersActivities').optional({ values: 'falsy' }),
+  body('alertsBulletins').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);

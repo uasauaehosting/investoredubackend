@@ -44,12 +44,15 @@ export interface IReadingMaterial {
 export interface IFramework {
   id?: number;
   title: string;
+  titleAr?: string;
   description: string;
+  descriptionAr?: string;
   author: string;
   date: Date;
   fileUrl: string;
   imageUrl: string;
   content?: string;
+  contentAr?: string;
   authorityId?: number;
   categoryId?: number;
   views: number;
@@ -531,63 +534,57 @@ export class ReadingMaterialModel {
 // Framework Model
 export class FrameworkModel {
   static async create(frameworkData: Omit<IFramework, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = frameworkData;
+    const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = frameworkData;
     const query = `
-      INSERT INTO frameworks (title, description, author, date, file_url, image_url, content, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO frameworks (title, title_ar, description, description_ar, author, date, file_url, image_url, content, content_ar, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, authorityId, categoryId, views, downloads, isActive]);
   }
 
   static async findAll(): Promise<IFramework[]> {
-    const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY date DESC';
+    const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY date DESC, id DESC';
     const results = await executeQuery<any>(query);
-    return results.map(result => ({
+    return results.map((result) => FrameworkModel.mapFrameworkRow(result));
+  }
+
+  static async findAllAdmin(): Promise<IFramework[]> {
+    const query = 'SELECT * FROM frameworks ORDER BY date DESC, id DESC';
+    const results = await executeQuery<any>(query);
+    return results.map((result) => FrameworkModel.mapFrameworkRow(result));
+  }
+
+  private static mapFrameworkRow(result: any): IFramework {
+    return {
       id: result.id,
       title: result.title,
+      titleAr: result.title_ar,
       description: result.description,
+      descriptionAr: result.description_ar,
       author: result.author,
       date: result.date,
       fileUrl: result.file_url,
       imageUrl: result.image_url,
       content: result.content,
+      contentAr: result.content_ar,
       authorityId: result.authority_id,
       categoryId: result.category_id,
       views: result.views,
       downloads: result.downloads,
       isActive: result.is_active,
       createdAt: result.created_at,
-      updatedAt: result.updated_at
-    }));
+      updatedAt: result.updated_at,
+    };
   }
 
   static async findById(id: number): Promise<IFramework | null> {
     const query = 'SELECT * FROM frameworks WHERE id = ? AND is_active = true';
     const result = await executeSingleQuery<any>(query, [id]);
-    if (result) {
-      return {
-        id: result.id,
-        title: result.title,
-        description: result.description,
-        author: result.author,
-        date: result.date,
-        fileUrl: result.file_url,
-        imageUrl: result.image_url,
-        content: result.content,
-        authorityId: result.authority_id,
-        categoryId: result.category_id,
-        views: result.views,
-        downloads: result.downloads,
-        isActive: result.is_active,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at
-      };
-    }
-    return null;
+    return result ? FrameworkModel.mapFrameworkRow(result) : null;
   }
 
   static async update(id: number, updateData: Partial<IFramework>): Promise<boolean> {
-    const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;
+    const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -595,9 +592,17 @@ export class FrameworkModel {
       updateFields.push('title = ?');
       updateValues.push(title);
     }
+    if (titleAr !== undefined) {
+      updateFields.push('title_ar = ?');
+      updateValues.push(titleAr);
+    }
     if (description !== undefined) {
       updateFields.push('description = ?');
       updateValues.push(description);
+    }
+    if (descriptionAr !== undefined) {
+      updateFields.push('description_ar = ?');
+      updateValues.push(descriptionAr);
     }
     if (author !== undefined) {
       updateFields.push('author = ?');
@@ -618,6 +623,10 @@ export class FrameworkModel {
     if (content !== undefined) {
       updateFields.push('content = ?');
       updateValues.push(content);
+    }
+    if (contentAr !== undefined) {
+      updateFields.push('content_ar = ?');
+      updateValues.push(contentAr);
     }
     if (authorityId !== undefined) {
       updateFields.push('authority_id = ?');
@@ -798,7 +807,7 @@ export class PrincipleModel {
   }
 
   static async delete(id: number): Promise<boolean> {
-    const query = 'UPDATE principles SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    const query = 'DELETE FROM principles WHERE id = ?';
     const result = await executeUpdate(query, [id]);
     return result > 0;
   }

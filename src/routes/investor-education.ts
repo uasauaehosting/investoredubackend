@@ -29,7 +29,6 @@ router.get('/authorities', async (req: any, res: any) => {
 });
 
 router.post('/authorities', authenticate, authorize('Super Admin', 'Admin'), [
-  body('name').notEmpty().withMessage('Name is required'),
   body('type').optional().isIn(['University', 'Hospital', 'Government Body', 'Research Institute', 'Other']).withMessage('Invalid type'),
   body('description').optional().isString(),
   body('website').optional().isURL().withMessage('Website must be a valid URL'),
@@ -60,7 +59,6 @@ router.post('/authorities', authenticate, authorize('Super Admin', 'Admin'), [
 });
 
 router.put('/authorities/:id', authenticate, authorize('Super Admin', 'Admin'), [
-  body('name').optional().notEmpty().withMessage('Name cannot be empty'),
   body('type').optional().isIn(['University', 'Hospital', 'Government Body', 'Research Institute', 'Other']).withMessage('Invalid type'),
   body('description').optional().isString(),
   body('website').optional().isURL().withMessage('Website must be a valid URL'),
@@ -126,7 +124,6 @@ router.get('/categories/authority/:authorityId', async (req: any, res: any) => {
 });
 
 router.post('/categories', authenticate, authorize('Super Admin', 'Admin'), [
-  body('name').notEmpty().withMessage('Name is required'),
   body('authorityId').isInt({ min: 1 }).withMessage('Authority ID must be a positive integer'),
   body('description').optional().isString(),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
@@ -153,7 +150,6 @@ router.post('/categories', authenticate, authorize('Super Admin', 'Admin'), [
 });
 
 router.put('/categories/:id', authenticate, authorize('Super Admin', 'Admin'), [
-  body('name').optional().notEmpty().withMessage('Name cannot be empty'),
   body('authorityId').optional().isInt({ min: 1 }).withMessage('Authority ID must be a positive integer'),
   body('description').optional().isString(),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
@@ -204,11 +200,8 @@ router.get('/reading-materials', async (req: any, res: any) => {
 });
 
 router.post('/reading-materials', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('category').notEmpty().withMessage('Category is required'),
   body('author').optional().isString(),
-  body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+  body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
   body('pdfUrl').optional().isURL().withMessage('PDF URL must be a valid URL'),
   body('authorityId').optional().isInt({ min: 1 }).withMessage('Authority ID must be a positive integer'),
   body('categoryId').optional().isInt({ min: 1 }).withMessage('Category ID must be a positive integer'),
@@ -261,9 +254,6 @@ router.get('/reading-materials/:id', async (req: any, res: any) => {
 
 // PUT route for updating reading materials
 router.put('/reading-materials/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().notEmpty().withMessage('Description cannot be empty'),
-  body('category').optional().notEmpty().withMessage('Category cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
   body('pdfUrl').optional().isURL().withMessage('PDF URL must be a valid URL'),
@@ -326,6 +316,15 @@ router.get('/frameworks', async (req: any, res: any) => {
   }
 });
 
+router.get('/frameworks/admin', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req: any, res: any) => {
+  try {
+    const frameworks = await FrameworkModel.findAllAdmin();
+    res.json(frameworks);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.get('/frameworks/:id', async (req: any, res: any) => {
   try {
     const frameworkId = parseInt(req.params.id);
@@ -340,10 +339,8 @@ router.get('/frameworks/:id', async (req: any, res: any) => {
 });
 
 router.post('/frameworks', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
   body('author').optional().isString(),
-  body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+  body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
@@ -368,12 +365,15 @@ router.post('/frameworks', authenticate, authorize('Super Admin', 'Admin', 'Edit
     // Set default values for optional fields
     const frameworkData = {
       title: req.body.title,
+      titleAr: req.body.titleAr || null,
       description: req.body.description,
+      descriptionAr: req.body.descriptionAr || null,
       author: req.body.author || '',
       date: new Date(req.body.date),
       fileUrl: req.body.fileUrl || '',
       imageUrl: req.body.imageUrl || '',
       content: req.body.content || '',
+      contentAr: req.body.contentAr || null,
       authorityId: req.body.authorityId || null,
       categoryId: req.body.categoryId || null,
       views: req.body.views || 0,
@@ -390,8 +390,6 @@ router.post('/frameworks', authenticate, authorize('Super Admin', 'Admin', 'Edit
 });
 
 router.put('/frameworks/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().notEmpty().withMessage('Description cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
@@ -435,7 +433,7 @@ router.put('/frameworks/:id', authenticate, authorize('Super Admin', 'Admin', 'E
   }
 });
 
-router.delete('/frameworks/:id', authenticate, authorize('Super Admin', 'Admin'), async (req: any, res: any) => {
+router.delete('/frameworks/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req: any, res: any) => {
   try {
     const frameworkId = parseInt(req.params.id);
     const deleted = await FrameworkModel.delete(frameworkId);
@@ -486,10 +484,8 @@ router.get('/principles/:id', async (req: any, res: any) => {
 });
 
 router.post('/principles', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
   body('author').optional().isString(),
-  body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+  body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
@@ -535,8 +531,6 @@ router.post('/principles', authenticate, authorize('Super Admin', 'Admin', 'Edit
 });
 
 router.put('/principles/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().notEmpty().withMessage('Description cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
@@ -639,10 +633,8 @@ router.get('/investment-products/:id', async (req: any, res: any) => {
 });
 
 router.post('/investment-products', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
   body('author').optional().isString(),
-  body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+  body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('imageUrl', 'Image URL must be a valid URL'),
   body('content').optional().isString(),
@@ -690,8 +682,6 @@ router.post('/investment-products', authenticate, authorize('Super Admin', 'Admi
 });
 
 router.put('/investment-products/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-  body('description').optional().notEmpty().withMessage('Description cannot be empty'),
   body('author').optional().isString(),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
@@ -759,10 +749,6 @@ router.get('/member-activities', async (req: any, res: any) => {
 });
 
 router.post('/member-activities', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('type').notEmpty().withMessage('Type is required'),
-  body('organization').notEmpty().withMessage('Organization is required'),
   body('date').optional().isISO8601().withMessage('Date must be a valid date'),
   body('status').optional().isString(),
   body('participants').optional().isInt({ min: 0 }).withMessage('Participants must be a non-negative integer'),
@@ -809,10 +795,8 @@ router.get('/member-strategies-projects', async (req: any, res: any) => {
 });
 
 router.post('/member-strategies-projects', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
   body('description').optional(),
-  body('authority_name').notEmpty().withMessage('Authority name is required'),
-  body('type').isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
+  body('type').optional({ values: 'falsy' }).isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('file_url', 'File URL must be a valid URL'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
@@ -840,9 +824,7 @@ router.post('/member-strategies-projects', authenticate, authorize('Super Admin'
 });
 
 router.put('/member-strategies-projects/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
   body('description').optional(),
-  body('authority_name').optional().notEmpty().withMessage('Authority name cannot be empty'),
   body('type').optional().isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('file_url', 'File URL must be a valid URL'),
@@ -1008,11 +990,8 @@ router.get('/alerts-bulletins', async (req: any, res: any) => {
 });
 
 router.post('/alerts-bulletins', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('type').notEmpty().withMessage('Type is required'),
   body('priority').optional().isString(),
-  body('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+  body('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
   body('author').optional().isString(),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
 ], async (req: any, res: any) => {

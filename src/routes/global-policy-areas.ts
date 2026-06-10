@@ -38,10 +38,10 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').notEmpty().withMessage('Title is required'),
+  body('title').optional({ values: 'falsy' }),
   body('description').optional(),
-  body('institution').notEmpty().withMessage('Institution is required'),
-  body('category').notEmpty().withMessage('Category is required'),
+  body('institution').optional({ values: 'falsy' }),
+  body('category').optional({ values: 'falsy' }),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('file_url', 'File URL must be a valid URL'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
@@ -69,10 +69,10 @@ router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
 });
 
 router.put('/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('title').optional().notEmpty().withMessage('Title cannot be empty'),
+  body('title').optional({ values: 'falsy' }),
   body('description').optional(),
-  body('institution').optional().notEmpty().withMessage('Institution cannot be empty'),
-  body('category').optional().notEmpty().withMessage('Category cannot be empty'),
+  body('institution').optional({ values: 'falsy' }),
+  body('category').optional({ values: 'falsy' }),
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('file_url', 'File URL must be a valid URL'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),

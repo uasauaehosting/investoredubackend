@@ -86,15 +86,8 @@ router.post('/', authenticate, authorize('Super Admin', 'Admin', 'Editor'), asyn
     try {
         const alertBulletinData: CreateAlertBulletinData = req.body;
 
-        // Validate required fields
-        if (!alertBulletinData.title || !alertBulletinData.type || !alertBulletinData.authority_name) {
-            return res.status(400).json({ 
-                error: 'Missing required fields: title, type, authority_name' 
-            });
-        }
-
-        // Validate type
-        if (!['Alert', 'Bulletin'].includes(alertBulletinData.type)) {
+        // Validate type when provided
+        if (alertBulletinData.type && !['Alert', 'Bulletin'].includes(alertBulletinData.type)) {
             return res.status(400).json({ 
                 error: 'Type must be either Alert or Bulletin' 
             });
