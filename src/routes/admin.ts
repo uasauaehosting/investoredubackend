@@ -15,12 +15,12 @@ router.get('/', authenticate, authorize('Super Admin'), async (req, res) => {
 });
 
 router.post('/', authenticate, authorize('Super Admin'), [
-  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('email').isEmail().withMessage('Valid email is required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('firstName').notEmpty().withMessage('First name is required'),
-  body('lastName').notEmpty().withMessage('Last name is required'),
-  body('role').isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role')
+  body('username').optional({ values: 'falsy' }).isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
+  body('password').optional({ values: 'falsy' }).isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('firstName').optional({ values: 'falsy' }),
+  body('lastName').optional({ values: 'falsy' }),
+  body('role').optional().isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -52,11 +52,11 @@ router.post('/', authenticate, authorize('Super Admin'), [
 });
 
 router.put('/:id', authenticate, authorize('Super Admin'), [
-  body('username').optional().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-  body('email').optional().isEmail().withMessage('Valid email is required'),
-  body('firstName').optional().notEmpty().withMessage('First name cannot be empty'),
-  body('lastName').optional().notEmpty().withMessage('Last name cannot be empty'),
-  body('role').optional().isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role')
+  body('username').optional({ values: 'falsy' }).isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
+  body('firstName').optional({ values: 'falsy' }),
+  body('lastName').optional({ values: 'falsy' }),
+  body('role').optional().isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

@@ -16,10 +16,7 @@ router.get('/footer/stats', async (_req, res) => {
 
 router.put('/footer/stats', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req, res) => {
   try {
-    const stats = req.body.stats;
-    if (!Array.isArray(stats)) {
-      return res.status(400).json({ message: 'stats array is required' });
-    }
+    const stats = Array.isArray(req.body.stats) ? req.body.stats : [];
     await FooterStats.upsertAll(stats);
     const updated = await FooterStats.findAll();
     res.json(updated);
@@ -54,7 +51,7 @@ router.get('/:key', async (req, res) => {
 });
 
 router.put('/:key', authenticate, authorize('Super Admin', 'Admin', 'Editor'), [
-  body('content').isObject().withMessage('Content must be a JSON object'),
+  body('content').optional().isObject().withMessage('Content must be a JSON object'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
