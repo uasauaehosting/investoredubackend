@@ -956,7 +956,7 @@ export class InvestmentProductModel {
   }
 
   static async delete(id: number): Promise<boolean> {
-    const query = 'UPDATE investment_products SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    const query = 'DELETE FROM investment_products WHERE id = ?';
     const result = await executeUpdate(query, [id]);
     return result > 0;
   }
