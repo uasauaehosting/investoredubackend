@@ -777,7 +777,7 @@ router.put('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.au
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
-router.delete('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
+router.delete('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const deleted = await models_1.MemberStrategyProject.delete(parseInt(req.params.id));
         if (!deleted) {

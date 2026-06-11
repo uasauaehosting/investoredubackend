@@ -12,6 +12,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const compression_1 = __importDefault(require("compression"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const database_1 = require("./utils/database");
+const ensureDisplayOrder_1 = require("./utils/ensureDisplayOrder");
 const routes_1 = __importDefault(require("./routes"));
 const media_1 = __importDefault(require("./routes/media"));
 const app = (0, express_1.default)();
@@ -20,6 +21,7 @@ const initializeDatabase = async () => {
     try {
         await (0, database_1.initConnection)();
         console.log('✅ MySQL database initialized successfully');
+        await (0, ensureDisplayOrder_1.ensureDisplayOrderColumns)();
         console.log('Database initialization completed');
     }
     catch (error) {

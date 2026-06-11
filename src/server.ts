@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { initConnection } from './utils/database';
+import { ensureDisplayOrderColumns } from './utils/ensureDisplayOrder';
 import routes from './routes';
 import mediaRoutes from './routes/media';
 
@@ -20,7 +21,9 @@ const initializeDatabase = async () => {
     // Initialize MySQL for all features
     await initConnection();
     console.log('✅ MySQL database initialized successfully');
-    
+
+    await ensureDisplayOrderColumns();
+
     console.log('Database initialization completed');
   } catch (error: any) {
     console.error('Critical database initialization failed:', error.message);
