@@ -18,8 +18,8 @@ router.get('/slides', async (req, res) => {
     }
 });
 router.post('/slides', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('display_order').isNumeric().withMessage('Display order must be a number')
+    (0, express_validator_1.body)('title').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('display_order').optional().isNumeric().withMessage('Display order must be a number'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -35,7 +35,7 @@ router.post('/slides', auth_1.authenticate, (0, auth_1.authorize)('Super Admin',
     }
 });
 router.put('/slides/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty')
+    (0, express_validator_1.body)('title').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -86,9 +86,27 @@ router.get('/news/:id', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+router.put('/news/reorder', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
+    (0, express_validator_1.body)('ids').isArray({ min: 1 }).withMessage('ids must be a non-empty array'),
+    (0, express_validator_1.body)('ids.*').isInt().withMessage('Each id must be an integer'),
+], async (req, res) => {
+    try {
+        const errors = (0, express_validator_1.validationResult)(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        const ids = req.body.ids.map((id) => parseInt(String(id), 10));
+        await models_1.News.reorder(ids);
+        const news = await models_1.News.findAll();
+        res.json(news);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 router.post('/news', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('excerpt').notEmpty().withMessage('Excerpt is required')
+    (0, express_validator_1.body)('title').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('excerpt').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         console.log('POST /news - Request body:', req.body);
@@ -109,8 +127,8 @@ router.post('/news', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', '
     }
 });
 router.put('/news/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    (0, express_validator_1.body)('excerpt').optional().notEmpty().withMessage('Excerpt cannot be empty')
+    (0, express_validator_1.body)('title').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('excerpt').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         console.log('PUT /news/:id - Request body:', req.body);
@@ -156,8 +174,8 @@ router.get('/members', async (req, res) => {
     }
 });
 router.post('/members', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'),
-    (0, express_validator_1.body)('country').notEmpty().withMessage('Country is required')
+    (0, express_validator_1.body)('name').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('country').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -177,8 +195,8 @@ router.post('/members', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'
     }
 });
 router.put('/members/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('name').optional().notEmpty().withMessage('Name cannot be empty'),
-    (0, express_validator_1.body)('country').optional().notEmpty().withMessage('Country cannot be empty')
+    (0, express_validator_1.body)('name').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('country').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -225,9 +243,9 @@ router.get('/stats', async (req, res) => {
     }
 });
 router.post('/stats', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('readingMaterials').notEmpty().withMessage('Reading materials count is required'),
-    (0, express_validator_1.body)('membersActivities').notEmpty().withMessage('Members activities count is required'),
-    (0, express_validator_1.body)('alertsBulletins').notEmpty().withMessage('Alerts bulletins count is required')
+    (0, express_validator_1.body)('readingMaterials').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('membersActivities').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('alertsBulletins').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -243,9 +261,9 @@ router.post('/stats', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 
     }
 });
 router.put('/stats/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('readingMaterials').optional().notEmpty().withMessage('Reading materials count cannot be empty'),
-    (0, express_validator_1.body)('membersActivities').optional().notEmpty().withMessage('Members activities count cannot be empty'),
-    (0, express_validator_1.body)('alertsBulletins').optional().notEmpty().withMessage('Alerts bulletins count cannot be empty')
+    (0, express_validator_1.body)('readingMaterials').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('membersActivities').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('alertsBulletins').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);

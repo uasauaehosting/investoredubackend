@@ -13,6 +13,7 @@ const MIGRATION_FILES = [
     'create_cms_tables.sql',
     'create_slides_table.sql',
     'create_principles_table.sql',
+    'add_arabic_columns.sql',
 ];
 function splitStatements(sql) {
     const withoutBlockComments = sql.replace(/\/\*[\s\S]*?\*\//g, '');

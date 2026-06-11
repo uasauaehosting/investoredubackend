@@ -1,6 +1,7 @@
 export interface IFooterStat {
     id?: number;
     label: string;
+    labelAr?: string;
     value: string;
     displayOrder: number;
     isActive: boolean;

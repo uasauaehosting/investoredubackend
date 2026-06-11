@@ -2,9 +2,12 @@ export interface IEducationContent {
     id?: number;
     section: string;
     title: string;
+    titleAr?: string;
     description: string;
+    descriptionAr?: string;
     imageUrl: string | null;
     content: string | null;
+    contentAr?: string | null;
     displayOrder: number;
     isActive: boolean;
     createdAt?: Date;

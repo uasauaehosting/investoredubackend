@@ -1,0 +1,1 @@
+{"version":3,"file":"globalPolicyAreasSeed.d.ts","sourceRoot":"","sources":["../../src/data/globalPolicyAreasSeed.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,uBAAuB;IACtC,KAAK,EAAE,MAAM,CAAC;IACd,WAAW,EAAE,MAAM,CAAC;IACpB,WAAW,EAAE,MAAM,CAAC;IACpB,QAAQ,EAAE,MAAM,CAAC;IACjB,QAAQ,EAAE,MAAM,CAAC;CAClB;AAED,eAAO,MAAM,6BAA6B,EAAE,uBAAuB,EAoElE,CAAC"}

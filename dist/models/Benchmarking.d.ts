@@ -1,8 +1,10 @@
 export interface IBenchmarkingRecord {
     id?: number;
     authorityName: string;
+    authorityNameAr?: string;
     year: string;
     indicator: string | null;
+    indicatorAr?: string | null;
     value: string | null;
     data: Record<string, unknown> | null;
     isActive: boolean;

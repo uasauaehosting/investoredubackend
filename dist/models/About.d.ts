@@ -1,7 +1,9 @@
 export interface IAboutSection {
     id?: number;
     title: string;
+    titleAr?: string;
     content: string;
+    contentAr?: string;
     order: number;
     isActive: boolean;
     createdAt?: Date;

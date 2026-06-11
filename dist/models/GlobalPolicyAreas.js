@@ -6,7 +6,7 @@ class GlobalPolicyAreasModel {
     static async getAll(filters = {}) {
         let query = `
       SELECT
-        id, title, description, institution, category, file_url,
+        id, title, title_ar, description, description_ar, institution, category, file_url,
         DATE_FORMAT(date_published, '%Y-%m-%d') as date_published,
         is_active,
         DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at,
@@ -38,7 +38,7 @@ class GlobalPolicyAreasModel {
     static async getById(id) {
         const query = `
       SELECT
-        id, title, description, institution, category, file_url,
+        id, title, title_ar, description, description_ar, institution, category, file_url,
         DATE_FORMAT(date_published, '%Y-%m-%d') as date_published,
         is_active,
         DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at,
@@ -50,12 +50,14 @@ class GlobalPolicyAreasModel {
     }
     static async create(data) {
         const query = `
-      INSERT INTO global_policy_areas (title, description, institution, category, file_url, date_published, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO global_policy_areas (title, title_ar, description, description_ar, institution, category, file_url, date_published, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
         const insertId = await (0, database_1.executeInsert)(query, [
             data.title,
+            data.title_ar ?? null,
             data.description ?? null,
+            data.description_ar ?? null,
             data.institution,
             data.category,
             data.file_url ?? null,
@@ -71,9 +73,17 @@ class GlobalPolicyAreasModel {
             fields.push('title = ?');
             params.push(data.title);
         }
+        if (data.title_ar !== undefined) {
+            fields.push('title_ar = ?');
+            params.push(data.title_ar);
+        }
         if (data.description !== undefined) {
             fields.push('description = ?');
             params.push(data.description);
+        }
+        if (data.description_ar !== undefined) {
+            fields.push('description_ar = ?');
+            params.push(data.description_ar);
         }
         if (data.institution !== undefined) {
             fields.push('institution = ?');

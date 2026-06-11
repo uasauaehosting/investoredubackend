@@ -78,12 +78,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const alertBulletinData = req.body;
-        if (!alertBulletinData.title || !alertBulletinData.type || !alertBulletinData.authority_name) {
-            return res.status(400).json({
-                error: 'Missing required fields: title, type, authority_name'
-            });
-        }
-        if (!['Alert', 'Bulletin'].includes(alertBulletinData.type)) {
+        if (alertBulletinData.type && !['Alert', 'Bulletin'].includes(alertBulletinData.type)) {
             return res.status(400).json({
                 error: 'Type must be either Alert or Bulletin'
             });

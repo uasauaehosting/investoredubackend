@@ -7,9 +7,12 @@ function mapRow(row) {
         id: row.id,
         section: row.section,
         title: row.title,
+        titleAr: row.title_ar,
         description: row.description,
+        descriptionAr: row.description_ar,
         imageUrl: row.image_url,
         content: row.content,
+        contentAr: row.content_ar,
         displayOrder: row.display_order,
         isActive: row.is_active,
         createdAt: row.created_at,
@@ -19,12 +22,12 @@ function mapRow(row) {
 class EducationContentModel {
     static async create(data) {
         const query = `
-      INSERT INTO education_content (section, title, description, image_url, content, display_order, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO education_content (section, title, title_ar, description, description_ar, image_url, content, content_ar, display_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
         return (0, database_1.executeInsert)(query, [
-            data.section, data.title, data.description,
-            data.imageUrl, data.content, data.displayOrder,
+            data.section, data.title, data.titleAr ?? null, data.description, data.descriptionAr ?? null,
+            data.imageUrl, data.content, data.contentAr ?? null, data.displayOrder,
             data.isActive !== false,
         ]);
     }
@@ -67,9 +70,17 @@ class EducationContentModel {
             fields.push('title = ?');
             values.push(data.title);
         }
+        if (data.titleAr !== undefined) {
+            fields.push('title_ar = ?');
+            values.push(data.titleAr);
+        }
         if (data.description !== undefined) {
             fields.push('description = ?');
             values.push(data.description);
+        }
+        if (data.descriptionAr !== undefined) {
+            fields.push('description_ar = ?');
+            values.push(data.descriptionAr);
         }
         if (data.imageUrl !== undefined) {
             fields.push('image_url = ?');
@@ -78,6 +89,10 @@ class EducationContentModel {
         if (data.content !== undefined) {
             fields.push('content = ?');
             values.push(data.content);
+        }
+        if (data.contentAr !== undefined) {
+            fields.push('content_ar = ?');
+            values.push(data.contentAr);
         }
         if (data.displayOrder !== undefined) {
             fields.push('display_order = ?');

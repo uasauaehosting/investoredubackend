@@ -39,12 +39,15 @@ export interface IReadingMaterial {
 export interface IFramework {
     id?: number;
     title: string;
+    titleAr?: string;
     description: string;
+    descriptionAr?: string;
     author: string;
     date: Date;
     fileUrl: string;
     imageUrl: string;
     content?: string;
+    contentAr?: string;
     authorityId?: number;
     categoryId?: number;
     views: number;
@@ -56,12 +59,15 @@ export interface IFramework {
 export interface IPrinciple {
     id?: number;
     title: string;
+    titleAr?: string;
     description: string;
+    descriptionAr?: string;
     author: string;
     date: Date;
     fileUrl: string;
     imageUrl: string;
     content?: string;
+    contentAr?: string;
     authorityId?: number;
     categoryId?: number;
     views: number;
@@ -73,12 +79,15 @@ export interface IPrinciple {
 export interface IInvestmentProduct {
     id?: number;
     title: string;
+    titleAr?: string;
     description: string;
+    descriptionAr?: string;
     author: string;
     date: Date;
     fileUrl: string;
     imageUrl: string;
     content?: string;
+    contentAr?: string;
     slug?: string;
     authorityId?: number;
     categoryId?: number;
@@ -105,7 +114,9 @@ export type StrategyProjectType = 'Strategy' | 'Report';
 export interface IMemberStrategyProject {
     id?: number;
     title: string;
+    titleAr?: string;
     description: string;
+    descriptionAr?: string;
     authority_name: string;
     memberId?: number | null;
     type: StrategyProjectType | string;
@@ -161,6 +172,8 @@ export declare class ReadingMaterialModel {
 export declare class FrameworkModel {
     static create(frameworkData: Omit<IFramework, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;
     static findAll(): Promise<IFramework[]>;
+    static findAllAdmin(): Promise<IFramework[]>;
+    private static mapFrameworkRow;
     static findById(id: number): Promise<IFramework | null>;
     static update(id: number, updateData: Partial<IFramework>): Promise<boolean>;
     static incrementViews(id: number): Promise<boolean>;
@@ -197,7 +210,9 @@ export declare class MemberStrategyProjectModel {
     private static mapRow;
     static create(projectData: {
         title: string;
+        titleAr?: string;
         description: string;
+        descriptionAr?: string;
         authority_name: string;
         type: StrategyProjectType | string;
         file_url?: string | null;

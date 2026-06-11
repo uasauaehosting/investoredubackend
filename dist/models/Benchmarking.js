@@ -9,8 +9,10 @@ function mapRow(row) {
     return {
         id: row.id,
         authorityName: row.authority_name,
+        authorityNameAr: row.authority_name_ar,
         year: row.year,
         indicator: row.indicator,
+        indicatorAr: row.indicator_ar,
         value: row.value,
         data,
         isActive: row.is_active,
@@ -21,11 +23,11 @@ function mapRow(row) {
 class BenchmarkingModel {
     static async create(data) {
         const query = `
-      INSERT INTO benchmarking_records (authority_name, year, indicator, value, data, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO benchmarking_records (authority_name, authority_name_ar, year, indicator, indicator_ar, value, data, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
         return (0, database_1.executeInsert)(query, [
-            data.authorityName, data.year, data.indicator, data.value,
+            data.authorityName, data.authorityNameAr ?? null, data.year, data.indicator, data.indicatorAr ?? null, data.value,
             data.data ? JSON.stringify(data.data) : null,
             data.isActive !== false,
         ]);
@@ -57,6 +59,10 @@ class BenchmarkingModel {
             fields.push('authority_name = ?');
             values.push(data.authorityName);
         }
+        if (data.authorityNameAr !== undefined) {
+            fields.push('authority_name_ar = ?');
+            values.push(data.authorityNameAr);
+        }
         if (data.year !== undefined) {
             fields.push('year = ?');
             values.push(data.year);
@@ -64,6 +70,10 @@ class BenchmarkingModel {
         if (data.indicator !== undefined) {
             fields.push('indicator = ?');
             values.push(data.indicator);
+        }
+        if (data.indicatorAr !== undefined) {
+            fields.push('indicator_ar = ?');
+            values.push(data.indicatorAr);
         }
         if (data.value !== undefined) {
             fields.push('value = ?');

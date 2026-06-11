@@ -11,6 +11,7 @@ export interface INews {
     image?: string;
     pdfFile?: string;
     date?: Date;
+    displayOrder?: number;
     isActive: boolean;
     createdAt?: Date;
     updatedAt?: Date;
@@ -39,9 +40,12 @@ export interface IHomeStats {
 export interface ISlide {
     id?: number;
     title: string;
+    titleAr?: string;
     subtitle?: string;
+    subtitleAr?: string;
     image_url?: string;
     cta_text?: string;
+    cta_textAr?: string;
     cta_href?: string;
     display_order: number;
     is_active: boolean;
@@ -49,11 +53,13 @@ export interface ISlide {
     updatedAt?: Date;
 }
 export declare class NewsModel {
+    static getNextDisplayOrder(): Promise<number>;
     static create(newsData: Omit<INews, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;
     static findAll(): Promise<INews[]>;
     static findById(id: number): Promise<INews | null>;
     static update(id: number, updateData: Partial<INews>): Promise<boolean>;
     static delete(id: number): Promise<boolean>;
+    static reorder(ids: number[]): Promise<void>;
 }
 export declare class MemberModel {
     static create(memberData: Omit<IMember, 'id' | 'createdAt' | 'updatedAt'>): Promise<number>;

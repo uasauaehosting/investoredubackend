@@ -18,9 +18,9 @@ router.get('/sections', async (req, res) => {
     }
 });
 router.post('/sections', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('content').notEmpty().withMessage('Content is required'),
-    (0, express_validator_1.body)('order').isInt({ min: 0 }).withMessage('Order must be a non-negative integer')
+    (0, express_validator_1.body)('title').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('content').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('order').optional().isInt({ min: 0 }).withMessage('Order must be a non-negative integer'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -70,9 +70,9 @@ router.get('/contact', async (req, res) => {
     }
 });
 router.post('/contact', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('type').isIn(['headquarters', 'contact']).withMessage('Invalid type'),
-    (0, express_validator_1.body)('address').optional().notEmpty().withMessage('Address cannot be empty'),
-    (0, express_validator_1.body)('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
+    (0, express_validator_1.body)('type').optional().isIn(['headquarters', 'contact']).withMessage('Invalid type'),
+    (0, express_validator_1.body)('address').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('phone').optional({ values: 'falsy' }),
     (0, express_validator_1.body)('email').optional().isEmail().withMessage('Invalid email format')
 ], async (req, res) => {
     try {

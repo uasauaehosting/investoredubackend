@@ -354,69 +354,69 @@ exports.ReadingMaterialModel = ReadingMaterialModel;
 exports.ReadingMaterial = ReadingMaterialModel;
 class FrameworkModel {
     static async create(frameworkData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = frameworkData;
+        const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = frameworkData;
         const query = `
-      INSERT INTO frameworks (title, description, author, date, file_url, image_url, content, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO frameworks (title, title_ar, description, description_ar, author, date, file_url, image_url, content, content_ar, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY date DESC';
+        const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
-        return results.map(result => ({
+        return results.map((result) => FrameworkModel.mapFrameworkRow(result));
+    }
+    static async findAllAdmin() {
+        const query = 'SELECT * FROM frameworks ORDER BY date DESC, id DESC';
+        const results = await (0, database_1.executeQuery)(query);
+        return results.map((result) => FrameworkModel.mapFrameworkRow(result));
+    }
+    static mapFrameworkRow(result) {
+        return {
             id: result.id,
             title: result.title,
+            titleAr: result.title_ar,
             description: result.description,
+            descriptionAr: result.description_ar,
             author: result.author,
             date: result.date,
             fileUrl: result.file_url,
             imageUrl: result.image_url,
             content: result.content,
+            contentAr: result.content_ar,
             authorityId: result.authority_id,
             categoryId: result.category_id,
             views: result.views,
             downloads: result.downloads,
             isActive: result.is_active,
             createdAt: result.created_at,
-            updatedAt: result.updated_at
-        }));
+            updatedAt: result.updated_at,
+        };
     }
     static async findById(id) {
         const query = 'SELECT * FROM frameworks WHERE id = ? AND is_active = true';
         const result = await (0, database_1.executeSingleQuery)(query, [id]);
-        if (result) {
-            return {
-                id: result.id,
-                title: result.title,
-                description: result.description,
-                author: result.author,
-                date: result.date,
-                fileUrl: result.file_url,
-                imageUrl: result.image_url,
-                content: result.content,
-                authorityId: result.authority_id,
-                categoryId: result.category_id,
-                views: result.views,
-                downloads: result.downloads,
-                isActive: result.is_active,
-                createdAt: result.created_at,
-                updatedAt: result.updated_at
-            };
-        }
-        return null;
+        return result ? FrameworkModel.mapFrameworkRow(result) : null;
     }
     static async update(id, updateData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;
+        const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];
         if (title !== undefined) {
             updateFields.push('title = ?');
             updateValues.push(title);
         }
+        if (titleAr !== undefined) {
+            updateFields.push('title_ar = ?');
+            updateValues.push(titleAr);
+        }
         if (description !== undefined) {
             updateFields.push('description = ?');
             updateValues.push(description);
+        }
+        if (descriptionAr !== undefined) {
+            updateFields.push('description_ar = ?');
+            updateValues.push(descriptionAr);
         }
         if (author !== undefined) {
             updateFields.push('author = ?');
@@ -437,6 +437,10 @@ class FrameworkModel {
         if (content !== undefined) {
             updateFields.push('content = ?');
             updateValues.push(content);
+        }
+        if (contentAr !== undefined) {
+            updateFields.push('content_ar = ?');
+            updateValues.push(contentAr);
         }
         if (authorityId !== undefined) {
             updateFields.push('authority_id = ?');
@@ -485,12 +489,12 @@ class FrameworkModel {
 exports.FrameworkModel = FrameworkModel;
 class PrincipleModel {
     static async create(principleData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = principleData;
+        const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = principleData;
         const query = `
-      INSERT INTO principles (title, description, author, date, file_url, image_url, content, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO principles (title, title_ar, description, description_ar, author, date, file_url, image_url, content, content_ar, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
         const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC, id DESC';
@@ -506,12 +510,15 @@ class PrincipleModel {
         return {
             id: result.id,
             title: result.title,
+            titleAr: result.title_ar,
             description: result.description,
+            descriptionAr: result.description_ar,
             author: result.author,
             date: result.date,
             fileUrl: result.file_url,
             imageUrl: result.image_url,
             content: result.content,
+            contentAr: result.content_ar,
             authorityId: result.authority_id,
             categoryId: result.category_id,
             views: result.views,
@@ -527,16 +534,24 @@ class PrincipleModel {
         return result ? PrincipleModel.mapPrincipleRow(result) : null;
     }
     static async update(id, updateData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, authorityId, categoryId, views, downloads, isActive } = updateData;
+        const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, authorityId, categoryId, views, downloads, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];
         if (title !== undefined) {
             updateFields.push('title = ?');
             updateValues.push(title);
         }
+        if (titleAr !== undefined) {
+            updateFields.push('title_ar = ?');
+            updateValues.push(titleAr);
+        }
         if (description !== undefined) {
             updateFields.push('description = ?');
             updateValues.push(description);
+        }
+        if (descriptionAr !== undefined) {
+            updateFields.push('description_ar = ?');
+            updateValues.push(descriptionAr);
         }
         if (author !== undefined) {
             updateFields.push('author = ?');
@@ -557,6 +572,10 @@ class PrincipleModel {
         if (content !== undefined) {
             updateFields.push('content = ?');
             updateValues.push(content);
+        }
+        if (contentAr !== undefined) {
+            updateFields.push('content_ar = ?');
+            updateValues.push(contentAr);
         }
         if (authorityId !== undefined) {
             updateFields.push('authority_id = ?');
@@ -587,7 +606,7 @@ class PrincipleModel {
         return result > 0;
     }
     static async delete(id) {
-        const query = 'UPDATE principles SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+        const query = 'DELETE FROM principles WHERE id = ?';
         const result = await (0, database_1.executeUpdate)(query, [id]);
         return result > 0;
     }
@@ -597,12 +616,15 @@ function mapInvestmentProductRow(result) {
     return {
         id: result.id,
         title: result.title,
+        titleAr: result.title_ar,
         description: result.description,
+        descriptionAr: result.description_ar,
         author: result.author,
         date: result.date,
         fileUrl: result.file_url,
         imageUrl: result.image_url,
         content: result.content,
+        contentAr: result.content_ar,
         slug: result.slug ?? undefined,
         authorityId: result.authority_id,
         categoryId: result.category_id,
@@ -615,12 +637,12 @@ function mapInvestmentProductRow(result) {
 }
 class InvestmentProductModel {
     static async create(productData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = productData;
+        const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, slug, authorityId, categoryId, views, downloads, isActive } = productData;
         const query = `
-      INSERT INTO investment_products (title, description, author, date, file_url, image_url, content, slug, authority_id, category_id, views, downloads, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO investment_products (title, title_ar, description, description_ar, author, date, file_url, image_url, content, content_ar, slug, authority_id, category_id, views, downloads, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, description, author, date, fileUrl, imageUrl, content, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
         const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC, id DESC';
@@ -646,16 +668,24 @@ class InvestmentProductModel {
         return result ? mapInvestmentProductRow(result) : null;
     }
     static async update(id, updateData) {
-        const { title, description, author, date, fileUrl, imageUrl, content, slug, authorityId, categoryId, views, downloads, isActive } = updateData;
+        const { title, titleAr, description, descriptionAr, author, date, fileUrl, imageUrl, content, contentAr, slug, authorityId, categoryId, views, downloads, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];
         if (title !== undefined) {
             updateFields.push('title = ?');
             updateValues.push(title);
         }
+        if (titleAr !== undefined) {
+            updateFields.push('title_ar = ?');
+            updateValues.push(titleAr);
+        }
         if (description !== undefined) {
             updateFields.push('description = ?');
             updateValues.push(description);
+        }
+        if (descriptionAr !== undefined) {
+            updateFields.push('description_ar = ?');
+            updateValues.push(descriptionAr);
         }
         if (author !== undefined) {
             updateFields.push('author = ?');
@@ -676,6 +706,10 @@ class InvestmentProductModel {
         if (content !== undefined) {
             updateFields.push('content = ?');
             updateValues.push(content);
+        }
+        if (contentAr !== undefined) {
+            updateFields.push('content_ar = ?');
+            updateValues.push(contentAr);
         }
         if (slug !== undefined) {
             updateFields.push('slug = ?');
@@ -710,7 +744,7 @@ class InvestmentProductModel {
         return result > 0;
     }
     static async delete(id) {
-        const query = 'UPDATE investment_products SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+        const query = 'DELETE FROM investment_products WHERE id = ?';
         const result = await (0, database_1.executeUpdate)(query, [id]);
         return result > 0;
     }
@@ -837,7 +871,9 @@ class MemberStrategyProjectModel {
         return {
             id: result.id,
             title: String(result.title ?? ''),
+            titleAr: result.title_ar ? String(result.title_ar) : undefined,
             description: String(result.description ?? ''),
+            descriptionAr: result.description_ar ? String(result.description_ar) : undefined,
             authority_name: authorityName,
             memberId: result.member_id ?? null,
             type: String(result.type ?? ''),
@@ -855,12 +891,12 @@ class MemberStrategyProjectModel {
         };
     }
     static async create(projectData) {
-        const { title, description, authority_name, type, file_url, isActive = true } = projectData;
+        const { title, titleAr, description, descriptionAr, authority_name, type, file_url, isActive = true } = projectData;
         const query = `
-      INSERT INTO member_strategies_projects (title, description, authority_name, type, status, file_url, is_active)
-      VALUES (?, ?, ?, ?, 'Active', ?, ?)
+      INSERT INTO member_strategies_projects (title, title_ar, description, description_ar, authority_name, type, status, file_url, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, description, authority_name, type, file_url ?? null, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, authority_name, type, file_url ?? null, isActive]);
     }
     static async findAll(options = {}) {
         const activeClause = options.includeInactive ? '' : 'WHERE msp.is_active = true';
@@ -892,9 +928,17 @@ class MemberStrategyProjectModel {
             fields.push('title = ?');
             values.push(updateData.title);
         }
+        if (updateData.titleAr !== undefined) {
+            fields.push('title_ar = ?');
+            values.push(updateData.titleAr);
+        }
         if (updateData.description !== undefined) {
             fields.push('description = ?');
             values.push(updateData.description);
+        }
+        if (updateData.descriptionAr !== undefined) {
+            fields.push('description_ar = ?');
+            values.push(updateData.descriptionAr);
         }
         if (updateData.authority_name !== undefined) {
             fields.push('authority_name = ?');

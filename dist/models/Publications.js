@@ -6,7 +6,7 @@ class PublicationsModel {
     static async getAll(filters = {}) {
         let query = `
       SELECT
-        id, title, description, authority_name, category, file_url,
+        id, title, title_ar, description, description_ar, authority_name, category, file_url,
         DATE_FORMAT(date_published, '%Y-%m-%d') as date_published,
         is_active,
         DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at,
@@ -40,7 +40,7 @@ class PublicationsModel {
     static async getById(id) {
         const query = `
       SELECT
-        id, title, description, authority_name, category, file_url,
+        id, title, title_ar, description, description_ar, authority_name, category, file_url,
         DATE_FORMAT(date_published, '%Y-%m-%d') as date_published,
         is_active,
         DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%s.000Z') as created_at,
@@ -52,12 +52,14 @@ class PublicationsModel {
     }
     static async create(data) {
         const query = `
-      INSERT INTO publications (title, description, authority_name, category, file_url, date_published, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO publications (title, title_ar, description, description_ar, authority_name, category, file_url, date_published, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
         const insertId = await (0, database_1.executeInsert)(query, [
             data.title,
+            data.title_ar ?? null,
             data.description ?? null,
+            data.description_ar ?? null,
             data.authority_name,
             data.category,
             data.file_url ?? null,
@@ -73,9 +75,17 @@ class PublicationsModel {
             fields.push('title = ?');
             params.push(data.title);
         }
+        if (data.title_ar !== undefined) {
+            fields.push('title_ar = ?');
+            params.push(data.title_ar);
+        }
         if (data.description !== undefined) {
             fields.push('description = ?');
             params.push(data.description);
+        }
+        if (data.description_ar !== undefined) {
+            fields.push('description_ar = ?');
+            params.push(data.description_ar);
         }
         if (data.authority_name !== undefined) {
             fields.push('authority_name = ?');

@@ -61,11 +61,6 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const portalData = req.body;
-        if (!portalData.title || !portalData.short_title || !portalData.link || !portalData.authority_name) {
-            return res.status(400).json({
-                error: 'Missing required fields: title, short_title, link, authority_name'
-            });
-        }
         const newPortal = await Portals_1.PortalModel.create(portalData);
         res.status(201).json(newPortal);
     }

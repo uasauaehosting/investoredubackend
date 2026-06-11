@@ -9,10 +9,10 @@ const models_1 = require("../models");
 const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
 router.post('/', [
-    (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'),
-    (0, express_validator_1.body)('email').isEmail().withMessage('Valid email is required'),
-    (0, express_validator_1.body)('subject').notEmpty().withMessage('Subject is required'),
-    (0, express_validator_1.body)('message').notEmpty().withMessage('Message is required')
+    (0, express_validator_1.body)('name').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
+    (0, express_validator_1.body)('subject').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('message').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -77,7 +77,7 @@ router.get('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Ad
     }
 });
 router.put('/:id/respond', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('response').notEmpty().withMessage('Response is required')
+    (0, express_validator_1.body)('response').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);

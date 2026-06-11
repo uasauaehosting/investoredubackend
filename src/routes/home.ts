@@ -86,6 +86,25 @@ router.get('/news/:id', async (req: any, res: any) => {
   }
 });
 
+router.put('/news/reorder', authenticate, authorize('Super Admin', 'Admin'), [
+  body('ids').isArray({ min: 1 }).withMessage('ids must be a non-empty array'),
+  body('ids.*').isInt().withMessage('Each id must be an integer'),
+], async (req: any, res: any) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const ids = req.body.ids.map((id: number | string) => parseInt(String(id), 10));
+    await News.reorder(ids);
+    const news = await News.findAll();
+    res.json(news);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.post('/news', authenticate, authorize('Super Admin', 'Admin'), [
   body('title').optional({ values: 'falsy' }),
   body('excerpt').optional({ values: 'falsy' }),

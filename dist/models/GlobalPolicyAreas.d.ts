@@ -3,7 +3,9 @@ export type PolicyCategory = 'Consumer Empowerment and Market Conduct' | 'Digita
 export interface GlobalPolicyArea {
     id: number;
     title: string;
+    title_ar?: string | null;
     description: string | null;
+    description_ar?: string | null;
     institution: string;
     category: string;
     file_url: string | null;
@@ -22,7 +24,9 @@ export declare class GlobalPolicyAreasModel {
     static getById(id: number): Promise<GlobalPolicyArea | null>;
     static create(data: {
         title: string;
+        title_ar?: string | null;
         description?: string | null;
+        description_ar?: string | null;
         institution: string;
         category: string;
         file_url?: string | null;
@@ -31,7 +35,9 @@ export declare class GlobalPolicyAreasModel {
     }): Promise<GlobalPolicyArea | null>;
     static update(id: number, data: Partial<{
         title: string;
+        title_ar: string | null;
         description: string | null;
+        description_ar: string | null;
         institution: string;
         category: string;
         file_url: string | null;

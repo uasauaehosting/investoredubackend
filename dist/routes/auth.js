@@ -10,8 +10,8 @@ const models_1 = require("../models");
 const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
 router.post('/login', [
-    (0, express_validator_1.body)('username').notEmpty().withMessage('Username is required'),
-    (0, express_validator_1.body)('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    (0, express_validator_1.body)('username').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('password').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -61,8 +61,8 @@ router.get('/me', auth_1.authenticate, async (req, res) => {
     });
 });
 router.post('/change-password', auth_1.authenticate, [
-    (0, express_validator_1.body)('currentPassword').notEmpty().withMessage('Current password is required'),
-    (0, express_validator_1.body)('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
+    (0, express_validator_1.body)('currentPassword').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('newPassword').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);

@@ -22,7 +22,6 @@ router.get('/authorities', async (req, res) => {
     }
 });
 router.post('/authorities', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'),
     (0, express_validator_1.body)('type').optional().isIn(['University', 'Hospital', 'Government Body', 'Research Institute', 'Other']).withMessage('Invalid type'),
     (0, express_validator_1.body)('description').optional().isString(),
     (0, express_validator_1.body)('website').optional().isURL().withMessage('Website must be a valid URL'),
@@ -51,7 +50,6 @@ router.post('/authorities', auth_1.authenticate, (0, auth_1.authorize)('Super Ad
     }
 });
 router.put('/authorities/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('name').optional().notEmpty().withMessage('Name cannot be empty'),
     (0, express_validator_1.body)('type').optional().isIn(['University', 'Hospital', 'Government Body', 'Research Institute', 'Other']).withMessage('Invalid type'),
     (0, express_validator_1.body)('description').optional().isString(),
     (0, express_validator_1.body)('website').optional().isURL().withMessage('Website must be a valid URL'),
@@ -108,7 +106,6 @@ router.get('/categories/authority/:authorityId', async (req, res) => {
     }
 });
 router.post('/categories', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('name').notEmpty().withMessage('Name is required'),
     (0, express_validator_1.body)('authorityId').isInt({ min: 1 }).withMessage('Authority ID must be a positive integer'),
     (0, express_validator_1.body)('description').optional().isString(),
     (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
@@ -133,7 +130,6 @@ router.post('/categories', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
     }
 });
 router.put('/categories/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
-    (0, express_validator_1.body)('name').optional().notEmpty().withMessage('Name cannot be empty'),
     (0, express_validator_1.body)('authorityId').optional().isInt({ min: 1 }).withMessage('Authority ID must be a positive integer'),
     (0, express_validator_1.body)('description').optional().isString(),
     (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
@@ -178,11 +174,8 @@ router.get('/reading-materials', async (req, res) => {
     }
 });
 router.post('/reading-materials', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
-    (0, express_validator_1.body)('category').notEmpty().withMessage('Category is required'),
     (0, express_validator_1.body)('author').optional().isString(),
-    (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+    (0, express_validator_1.body)('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
     (0, express_validator_1.body)('pdfUrl').optional().isURL().withMessage('PDF URL must be a valid URL'),
     (0, express_validator_1.body)('authorityId').optional().isInt({ min: 1 }).withMessage('Authority ID must be a positive integer'),
     (0, express_validator_1.body)('categoryId').optional().isInt({ min: 1 }).withMessage('Category ID must be a positive integer'),
@@ -230,9 +223,6 @@ router.get('/reading-materials/:id', async (req, res) => {
     }
 });
 router.put('/reading-materials/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
-    (0, express_validator_1.body)('category').optional().notEmpty().withMessage('Category cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
     (0, express_validator_1.body)('pdfUrl').optional().isURL().withMessage('PDF URL must be a valid URL'),
@@ -285,6 +275,15 @@ router.get('/frameworks', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+router.get('/frameworks/admin', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
+    try {
+        const frameworks = await models_1.FrameworkModel.findAllAdmin();
+        res.json(frameworks);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 router.get('/frameworks/:id', async (req, res) => {
     try {
         const frameworkId = parseInt(req.params.id);
@@ -299,10 +298,8 @@ router.get('/frameworks/:id', async (req, res) => {
     }
 });
 router.post('/frameworks', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
     (0, express_validator_1.body)('author').optional().isString(),
-    (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+    (0, express_validator_1.body)('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
@@ -327,12 +324,15 @@ router.post('/frameworks', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
         }
         const frameworkData = {
             title: req.body.title,
+            titleAr: req.body.titleAr || null,
             description: req.body.description,
+            descriptionAr: req.body.descriptionAr || null,
             author: req.body.author || '',
             date: new Date(req.body.date),
             fileUrl: req.body.fileUrl || '',
             imageUrl: req.body.imageUrl || '',
             content: req.body.content || '',
+            contentAr: req.body.contentAr || null,
             authorityId: req.body.authorityId || null,
             categoryId: req.body.categoryId || null,
             views: req.body.views || 0,
@@ -348,8 +348,6 @@ router.post('/frameworks', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
     }
 });
 router.put('/frameworks/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
@@ -390,7 +388,7 @@ router.put('/frameworks/:id', auth_1.authenticate, (0, auth_1.authorize)('Super 
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
-router.delete('/frameworks/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
+router.delete('/frameworks/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const frameworkId = parseInt(req.params.id);
         const deleted = await models_1.FrameworkModel.delete(frameworkId);
@@ -435,10 +433,8 @@ router.get('/principles/:id', async (req, res) => {
     }
 });
 router.post('/principles', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
     (0, express_validator_1.body)('author').optional().isString(),
-    (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+    (0, express_validator_1.body)('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
@@ -484,8 +480,6 @@ router.post('/principles', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
     }
 });
 router.put('/principles/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
@@ -579,10 +573,8 @@ router.get('/investment-products/:id', async (req, res) => {
     }
 });
 router.post('/investment-products', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
     (0, express_validator_1.body)('author').optional().isString(),
-    (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+    (0, express_validator_1.body)('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('imageUrl', 'Image URL must be a valid URL'),
     (0, express_validator_1.body)('content').optional().isString(),
@@ -630,8 +622,6 @@ router.post('/investment-products', auth_1.authenticate, (0, auth_1.authorize)('
     }
 });
 router.put('/investment-products/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description cannot be empty'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
@@ -692,10 +682,6 @@ router.get('/member-activities', async (req, res) => {
     }
 });
 router.post('/member-activities', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
-    (0, express_validator_1.body)('type').notEmpty().withMessage('Type is required'),
-    (0, express_validator_1.body)('organization').notEmpty().withMessage('Organization is required'),
     (0, express_validator_1.body)('date').optional().isISO8601().withMessage('Date must be a valid date'),
     (0, express_validator_1.body)('status').optional().isString(),
     (0, express_validator_1.body)('participants').optional().isInt({ min: 0 }).withMessage('Participants must be a non-negative integer'),
@@ -735,10 +721,8 @@ router.get('/member-strategies-projects', async (req, res) => {
     }
 });
 router.post('/member-strategies-projects', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
     (0, express_validator_1.body)('description').optional(),
-    (0, express_validator_1.body)('authority_name').notEmpty().withMessage('Authority name is required'),
-    (0, express_validator_1.body)('type').isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
+    (0, express_validator_1.body)('type').optional({ values: 'falsy' }).isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('file_url', 'File URL must be a valid URL'),
     (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
@@ -764,9 +748,7 @@ router.post('/member-strategies-projects', auth_1.authenticate, (0, auth_1.autho
     }
 });
 router.put('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title cannot be empty'),
     (0, express_validator_1.body)('description').optional(),
-    (0, express_validator_1.body)('authority_name').optional().notEmpty().withMessage('Authority name cannot be empty'),
     (0, express_validator_1.body)('type').optional().isIn(['Strategy', 'Report']).withMessage('Type must be Strategy or Report'),
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('file_url', 'File URL must be a valid URL'),
@@ -928,11 +910,8 @@ router.get('/alerts-bulletins', async (req, res) => {
     }
 });
 router.post('/alerts-bulletins', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), [
-    (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
-    (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required'),
-    (0, express_validator_1.body)('type').notEmpty().withMessage('Type is required'),
     (0, express_validator_1.body)('priority').optional().isString(),
-    (0, express_validator_1.body)('date').notEmpty().withMessage('Date is required').isISO8601().withMessage('Date must be a valid date'),
+    (0, express_validator_1.body)('date').optional({ values: 'falsy' }).isISO8601().withMessage('Date must be a valid date'),
     (0, express_validator_1.body)('author').optional().isString(),
     (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean')
 ], async (req, res) => {

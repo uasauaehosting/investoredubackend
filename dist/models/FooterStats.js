@@ -6,6 +6,7 @@ function mapRow(row) {
     return {
         id: row.id,
         label: row.label,
+        labelAr: row.label_ar,
         value: row.value,
         displayOrder: row.display_order,
         isActive: row.is_active,
@@ -19,7 +20,7 @@ class FooterStatsModel {
     static async upsertAll(stats) {
         await (0, database_1.executeUpdate)('UPDATE footer_stats SET is_active = false', []);
         for (const stat of stats) {
-            await (0, database_1.executeInsert)('INSERT INTO footer_stats (label, value, display_order, is_active) VALUES (?, ?, ?, ?)', [stat.label, stat.value, stat.displayOrder, true]);
+            await (0, database_1.executeInsert)('INSERT INTO footer_stats (label, label_ar, value, display_order, is_active) VALUES (?, ?, ?, ?, ?)', [stat.label, stat.labelAr ?? null, stat.value, stat.displayOrder, true]);
         }
     }
     static async update(id, data) {
@@ -28,6 +29,10 @@ class FooterStatsModel {
         if (data.label !== undefined) {
             fields.push('label = ?');
             values.push(data.label);
+        }
+        if (data.labelAr !== undefined) {
+            fields.push('label_ar = ?');
+            values.push(data.labelAr);
         }
         if (data.value !== undefined) {
             fields.push('value = ?');

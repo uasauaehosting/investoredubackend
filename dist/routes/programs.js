@@ -167,12 +167,6 @@ router.get('/search/:searchTerm', async (req, res) => {
 router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin', 'Editor'), async (req, res) => {
     try {
         const programData = req.body;
-        if (!programData.member_name) {
-            return res.status(400).json({
-                success: false,
-                message: 'Member name is required'
-            });
-        }
         const newProgram = await Programs_1.ProgramsModel.create(programData);
         res.status(201).json({
             success: true,

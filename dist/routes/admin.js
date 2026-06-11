@@ -18,12 +18,12 @@ router.get('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'), async
     }
 });
 router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'), [
-    (0, express_validator_1.body)('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-    (0, express_validator_1.body)('email').isEmail().withMessage('Valid email is required'),
-    (0, express_validator_1.body)('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    (0, express_validator_1.body)('firstName').notEmpty().withMessage('First name is required'),
-    (0, express_validator_1.body)('lastName').notEmpty().withMessage('Last name is required'),
-    (0, express_validator_1.body)('role').isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role')
+    (0, express_validator_1.body)('username').optional({ values: 'falsy' }).isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+    (0, express_validator_1.body)('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
+    (0, express_validator_1.body)('password').optional({ values: 'falsy' }).isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    (0, express_validator_1.body)('firstName').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('lastName').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('role').optional().isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -48,11 +48,11 @@ router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'), [
     }
 });
 router.put('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'), [
-    (0, express_validator_1.body)('username').optional().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
-    (0, express_validator_1.body)('email').optional().isEmail().withMessage('Valid email is required'),
-    (0, express_validator_1.body)('firstName').optional().notEmpty().withMessage('First name cannot be empty'),
-    (0, express_validator_1.body)('lastName').optional().notEmpty().withMessage('Last name cannot be empty'),
-    (0, express_validator_1.body)('role').optional().isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role')
+    (0, express_validator_1.body)('username').optional({ values: 'falsy' }).isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+    (0, express_validator_1.body)('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
+    (0, express_validator_1.body)('firstName').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('lastName').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('role').optional().isIn(['Super Admin', 'Admin', 'Editor']).withMessage('Invalid role'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);

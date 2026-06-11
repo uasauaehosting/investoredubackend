@@ -4,12 +4,12 @@ exports.ContactInfo = exports.AboutSection = exports.ContactInfoModel = exports.
 const database_1 = require("../utils/database");
 class AboutSectionModel {
     static async create(sectionData) {
-        const { title, content, order, isActive } = sectionData;
+        const { title, titleAr, content, contentAr, order, isActive } = sectionData;
         const query = `
-      INSERT INTO about_sections (title, content, \`order\`, is_active)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO about_sections (title, title_ar, content, content_ar, \`order\`, is_active)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, content, order, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, content, contentAr ?? null, order, isActive]);
     }
     static async findAll() {
         const query = 'SELECT * FROM about_sections WHERE is_active = true ORDER BY `order` ASC';
@@ -17,7 +17,9 @@ class AboutSectionModel {
         return results.map(result => ({
             id: result.id,
             title: result.title,
+            titleAr: result.title_ar,
             content: result.content,
+            contentAr: result.content_ar,
             order: result.order,
             isActive: result.is_active,
             createdAt: result.created_at,
@@ -31,7 +33,9 @@ class AboutSectionModel {
             return {
                 id: result.id,
                 title: result.title,
+                titleAr: result.title_ar,
                 content: result.content,
+                contentAr: result.content_ar,
                 order: result.order,
                 isActive: result.is_active,
                 createdAt: result.created_at,
@@ -41,16 +45,24 @@ class AboutSectionModel {
         return null;
     }
     static async update(id, updateData) {
-        const { title, content, order, isActive } = updateData;
+        const { title, titleAr, content, contentAr, order, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];
         if (title !== undefined) {
             updateFields.push('title = ?');
             updateValues.push(title);
         }
+        if (titleAr !== undefined) {
+            updateFields.push('title_ar = ?');
+            updateValues.push(titleAr);
+        }
         if (content !== undefined) {
             updateFields.push('content = ?');
             updateValues.push(content);
+        }
+        if (contentAr !== undefined) {
+            updateFields.push('content_ar = ?');
+            updateValues.push(contentAr);
         }
         if (order !== undefined) {
             updateFields.push('`order` = ?');

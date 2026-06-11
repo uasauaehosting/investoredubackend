@@ -2,7 +2,9 @@ export type PublicationCategory = 'Brochure' | 'Code' | 'General' | 'Guide' | 'O
 export interface Publication {
     id: number;
     title: string;
+    title_ar?: string | null;
     description: string | null;
+    description_ar?: string | null;
     authority_name: string;
     category: PublicationCategory;
     file_url: string | null;
@@ -21,7 +23,9 @@ export declare class PublicationsModel {
     static getById(id: number): Promise<Publication | null>;
     static create(data: {
         title: string;
+        title_ar?: string | null;
         description?: string | null;
+        description_ar?: string | null;
         authority_name: string;
         category: PublicationCategory;
         file_url?: string | null;
@@ -30,7 +34,9 @@ export declare class PublicationsModel {
     }): Promise<Publication | null>;
     static update(id: number, data: Partial<{
         title: string;
+        title_ar: string | null;
         description: string | null;
+        description_ar: string | null;
         authority_name: string;
         category: PublicationCategory;
         file_url: string | null;

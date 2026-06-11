@@ -13,6 +13,7 @@ export interface INews {
   image?: string;
   pdfFile?: string;
   date?: Date;
+  displayOrder?: number;
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -58,38 +59,50 @@ export interface ISlide {
 }
 
 // News Model
+function mapNewsRow(result: any): INews {
+  return {
+    id: result.id,
+    title: result.title,
+    titleAr: result.title_ar,
+    excerpt: result.summary || result.content || '',
+    excerptAr: result.summary_ar || result.content_ar || '',
+    fullDetail: result.full_detail,
+    fullDetailAr: result.full_detail_ar,
+    category: result.category,
+    link: result.link || '',
+    image: result.image,
+    pdfFile: result.pdf_file,
+    date: result.date,
+    displayOrder: result.display_order ?? 0,
+    isActive: result.is_active,
+    createdAt: result.created_at,
+    updatedAt: result.updated_at,
+  };
+}
+
 export class NewsModel {
+  static async getNextDisplayOrder(): Promise<number> {
+    const result = await executeSingleQuery<any>(
+      'SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM news',
+    );
+    return Number(result?.next_order ?? 1);
+  }
+
   static async create(newsData: Omit<INews, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, titleAr, excerpt, excerptAr, fullDetail, fullDetailAr, category, link, image, pdfFile, date, isActive = true } = newsData;
-    // Use current date if not provided
+    const { title, titleAr, excerpt, excerptAr, fullDetail, fullDetailAr, category, link, image, pdfFile, date, displayOrder, isActive = true } = newsData;
     const newsDate = date || new Date();
+    const order = displayOrder ?? await NewsModel.getNextDisplayOrder();
     const query = `
-      INSERT INTO news (title, title_ar, summary, summary_ar, content, content_ar, full_detail, full_detail_ar, category, link, image, pdf_file, date, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO news (title, title_ar, summary, summary_ar, content, content_ar, full_detail, full_detail_ar, category, link, image, pdf_file, date, display_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, titleAr, excerpt, excerptAr, excerpt, excerptAr, fullDetail, fullDetailAr, category || 'News', link, image, pdfFile, newsDate, isActive]);
+    return await executeInsert(query, [title, titleAr, excerpt, excerptAr, excerpt, excerptAr, fullDetail, fullDetailAr, category || 'News', link, image, pdfFile, newsDate, order, isActive]);
   }
 
   static async findAll(): Promise<INews[]> {
-    const query = 'SELECT * FROM news WHERE is_active = true ORDER BY date DESC';
+    const query = 'SELECT * FROM news WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
-    return results.map(result => ({
-      id: result.id,
-      title: result.title,
-      titleAr: result.title_ar,
-      excerpt: result.summary || result.content || '',
-      excerptAr: result.summary_ar || result.content_ar || '',
-      fullDetail: result.full_detail,
-      fullDetailAr: result.full_detail_ar,
-      category: result.category,
-      link: result.link || '',
-      image: result.image,
-      pdfFile: result.pdf_file,
-      date: result.date,
-      isActive: result.is_active,
-      createdAt: result.created_at,
-      updatedAt: result.updated_at
-    }));
+    return results.map(mapNewsRow);
   }
 
   static async findById(id: number): Promise<INews | null> {
@@ -99,23 +112,7 @@ export class NewsModel {
     console.log('NewsModel.findById - Raw result:', result); // Debug log
     
     if (result) {
-      const newsItem = {
-        id: result.id,
-        title: result.title,
-        titleAr: result.title_ar,
-        excerpt: result.summary || result.content || '',
-        excerptAr: result.summary_ar || result.content_ar || '',
-        fullDetail: result.full_detail,
-        fullDetailAr: result.full_detail_ar,
-        category: result.category,
-        link: result.link || '',
-        image: result.image,
-        pdfFile: result.pdf_file,
-        date: result.date,
-        isActive: result.is_active,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at
-      };
+      const newsItem = mapNewsRow(result);
       console.log('NewsModel.findById - Processed result:', newsItem); // Debug log
       return newsItem;
     }
@@ -125,7 +122,7 @@ export class NewsModel {
   static async update(id: number, updateData: Partial<INews>): Promise<boolean> {
     console.log('NewsModel.update - Input data:', updateData); // Debug log
     
-    const { title, titleAr, excerpt, excerptAr, fullDetail, fullDetailAr, category, link, image, pdfFile, date, isActive } = updateData;
+    const { title, titleAr, excerpt, excerptAr, fullDetail, fullDetailAr, category, link, image, pdfFile, date, displayOrder, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -173,6 +170,10 @@ export class NewsModel {
       updateFields.push('date = ?');
       updateValues.push(date);
     }
+    if (displayOrder !== undefined) {
+      updateFields.push('display_order = ?');
+      updateValues.push(displayOrder);
+    }
     if (isActive !== undefined) {
       updateFields.push('is_active = ?');
       updateValues.push(isActive);
@@ -192,6 +193,15 @@ export class NewsModel {
     const query = 'UPDATE news SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
     const result = await executeUpdate(query, [id]);
     return result > 0;
+  }
+
+  static async reorder(ids: number[]): Promise<void> {
+    for (let i = 0; i < ids.length; i++) {
+      await executeUpdate(
+        'UPDATE news SET display_order = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [i + 1, ids[i]],
+      );
+    }
   }
 }
 
