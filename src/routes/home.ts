@@ -74,6 +74,18 @@ router.get('/news', async (req: any, res: any) => {
   }
 });
 
+router.get('/news/:id', async (req: any, res: any) => {
+  try {
+    const news = await News.findById(parseInt(req.params.id));
+    if (!news) {
+      return res.status(404).json({ message: 'News not found' });
+    }
+    res.json(news);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 router.post('/news', authenticate, authorize('Super Admin', 'Admin'), [
   body('title').optional({ values: 'falsy' }),
   body('excerpt').optional({ values: 'falsy' }),

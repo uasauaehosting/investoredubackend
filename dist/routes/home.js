@@ -74,6 +74,18 @@ router.get('/news', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
+router.get('/news/:id', async (req, res) => {
+    try {
+        const news = await models_1.News.findById(parseInt(req.params.id));
+        if (!news) {
+            return res.status(404).json({ message: 'News not found' });
+        }
+        res.json(news);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 router.post('/news', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), [
     (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required'),
     (0, express_validator_1.body)('excerpt').notEmpty().withMessage('Excerpt is required')
