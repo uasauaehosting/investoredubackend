@@ -46,7 +46,7 @@ export interface UpdateProgramsData extends Partial<CreateProgramsData> {
 export class ProgramsModel {
   // Get all programs
   static async findAll(): Promise<Programs[]> {
-    const query = 'SELECT * FROM programs ORDER BY created_at DESC';
+    const query = 'SELECT * FROM programs ORDER BY display_order ASC, created_at DESC, id DESC';
     return executeQuery(query);
   }
 
@@ -59,13 +59,13 @@ export class ProgramsModel {
 
   // Get programs by member name
   static async findByMember(memberName: string): Promise<Programs[]> {
-    const query = 'SELECT * FROM programs WHERE member_name = ? ORDER BY created_at DESC';
+    const query = 'SELECT * FROM programs WHERE member_name = ? ORDER BY display_order ASC, created_at DESC, id DESC';
     return executeQuery(query, [memberName]);
   }
 
   // Get active programs only
   static async findActive(): Promise<Programs[]> {
-    const query = 'SELECT * FROM programs WHERE is_active = true ORDER BY created_at DESC';
+    const query = 'SELECT * FROM programs WHERE is_active = true ORDER BY display_order ASC, created_at DESC, id DESC';
     return executeQuery(query);
   }
 
@@ -193,7 +193,7 @@ export class ProgramsModel {
 
   // Search programs by member name
   static async search(searchTerm: string): Promise<Programs[]> {
-    const query = 'SELECT * FROM programs WHERE member_name LIKE ? ORDER BY created_at DESC';
+    const query = 'SELECT * FROM programs WHERE member_name LIKE ? ORDER BY display_order ASC, created_at DESC, id DESC';
     return executeQuery(query, [`%${searchTerm}%`]);
   }
 

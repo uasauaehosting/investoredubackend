@@ -79,7 +79,7 @@ export class AlertsBulletinsModel {
             params.push(filters.is_active);
         }
 
-        query += ` ORDER BY is_active DESC, date_published DESC, created_at DESC`;
+        query += ` ORDER BY is_active DESC, display_order ASC, date_published DESC, created_at DESC`;
 
         const results = await executeQuery<any>(query, params);
         

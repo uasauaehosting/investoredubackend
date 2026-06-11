@@ -32,7 +32,7 @@ class GlobalPolicyAreasModel {
             query += ` AND category IN (${placeholders})`;
             params.push(...filters.categories);
         }
-        query += ' ORDER BY date_published DESC, created_at DESC';
+        query += ' ORDER BY display_order ASC, date_published DESC, created_at DESC';
         return (0, database_1.executeQuery)(query, params);
     }
     static async getById(id) {

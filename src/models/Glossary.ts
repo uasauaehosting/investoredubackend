@@ -28,7 +28,7 @@ export class GlossaryTermModel {
   }
 
   static async findAll(): Promise<IGlossaryTerm[]> {
-    const query = 'SELECT * FROM glossary_terms WHERE is_active = true ORDER BY term ASC';
+    const query = 'SELECT * FROM glossary_terms WHERE is_active = true ORDER BY display_order ASC, term ASC, id ASC';
     const results = await executeQuery<any>(query);
     return results.map(result => ({
       id: result.id,
@@ -73,7 +73,7 @@ export class GlossaryTermModel {
   }
 
   static async findByCategory(category: string): Promise<IGlossaryTerm[]> {
-    const query = 'SELECT * FROM glossary_terms WHERE category = ? AND is_active = true ORDER BY term ASC';
+    const query = 'SELECT * FROM glossary_terms WHERE category = ? AND is_active = true ORDER BY display_order ASC, term ASC, id ASC';
     const results = await executeQuery<any>(query, [category]);
     return results.map(result => ({
       id: result.id,
@@ -94,7 +94,7 @@ export class GlossaryTermModel {
   }
 
   static async findByLanguage(language: string): Promise<IGlossaryTerm[]> {
-    const query = 'SELECT * FROM glossary_terms WHERE language = ? AND is_active = true ORDER BY term ASC';
+    const query = 'SELECT * FROM glossary_terms WHERE language = ? AND is_active = true ORDER BY display_order ASC, term ASC, id ASC';
     const results = await executeQuery<any>(query, [language]);
     return results.map(result => ({
       id: result.id,
@@ -115,7 +115,7 @@ export class GlossaryTermModel {
   }
 
   static async search(searchTerm: string): Promise<IGlossaryTerm[]> {
-    const query = 'SELECT * FROM glossary_terms WHERE (term LIKE ? OR definition LIKE ?) AND is_active = true ORDER BY term ASC';
+    const query = 'SELECT * FROM glossary_terms WHERE (term LIKE ? OR definition LIKE ?) AND is_active = true ORDER BY display_order ASC, term ASC, id ASC';
     const searchPattern = `%${searchTerm}%`;
     const results = await executeQuery<any>(query, [searchPattern, searchPattern]);
     return results.map(result => ({

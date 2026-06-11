@@ -30,7 +30,7 @@ class AlertsBulletinsModel {
             query += ` AND is_active = ?`;
             params.push(filters.is_active);
         }
-        query += ` ORDER BY is_active DESC, date_published DESC, created_at DESC`;
+        query += ` ORDER BY is_active DESC, display_order ASC, date_published DESC, created_at DESC`;
         const results = await (0, database_1.executeQuery)(query, params);
         return results.map(result => ({
             id: result.id,

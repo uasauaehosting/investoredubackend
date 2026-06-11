@@ -14,6 +14,7 @@ import adminRoutes from './admin';
 import uploadRoutes from './upload';
 import siteContentRoutes from './site-content';
 import benchmarkingRoutes from './benchmarking';
+import reorderRoutes from './reorder';
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.use('/admin', adminRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/site-content', siteContentRoutes);
 router.use('/benchmarking', benchmarkingRoutes);
+router.use('/reorder', reorderRoutes);
 
 router.get('/health', (req, res) => {
   res.json({ 

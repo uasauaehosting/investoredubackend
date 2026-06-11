@@ -142,7 +142,7 @@ class MemberModel {
         return await (0, database_1.executeInsert)(query, [name, nameAr, country, countryAr, website, logo, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM members WHERE is_active = true ORDER BY created_at DESC';
+        const query = 'SELECT * FROM members WHERE is_active = true ORDER BY display_order ASC, created_at DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map(result => ({
             id: result.id,

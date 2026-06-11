@@ -217,7 +217,7 @@ export class MemberModel {
   }
 
   static async findAll(): Promise<IMember[]> {
-    const query = 'SELECT * FROM members WHERE is_active = true ORDER BY created_at DESC';
+    const query = 'SELECT * FROM members WHERE is_active = true ORDER BY display_order ASC, created_at DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map(result => ({
       id: result.id,

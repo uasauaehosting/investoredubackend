@@ -362,12 +362,12 @@ class FrameworkModel {
         return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY date DESC, id DESC';
+        const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => FrameworkModel.mapFrameworkRow(result));
     }
     static async findAllAdmin() {
-        const query = 'SELECT * FROM frameworks ORDER BY date DESC, id DESC';
+        const query = 'SELECT * FROM frameworks ORDER BY display_order ASC, date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => FrameworkModel.mapFrameworkRow(result));
     }
@@ -497,12 +497,12 @@ class PrincipleModel {
         return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC, id DESC';
+        const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => PrincipleModel.mapPrincipleRow(result));
     }
     static async findAllAdmin() {
-        const query = 'SELECT * FROM principles ORDER BY date DESC, id DESC';
+        const query = 'SELECT * FROM principles ORDER BY display_order ASC, date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => PrincipleModel.mapPrincipleRow(result));
     }
@@ -645,12 +645,12 @@ class InvestmentProductModel {
         return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, author, date, fileUrl, imageUrl, content, contentAr ?? null, slug ?? null, authorityId, categoryId, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC, id DESC';
+        const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => mapInvestmentProductRow(result));
     }
     static async findAllAdmin() {
-        const query = 'SELECT * FROM investment_products ORDER BY date DESC, id DESC';
+        const query = 'SELECT * FROM investment_products ORDER BY display_order ASC, date DESC, id DESC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => mapInvestmentProductRow(result));
     }
@@ -905,7 +905,7 @@ class MemberStrategyProjectModel {
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
       ${activeClause}
-      ORDER BY COALESCE(msp.authority_name, m.name), msp.type, msp.title
+      ORDER BY msp.display_order ASC, COALESCE(msp.authority_name, m.name), msp.type, msp.title
     `;
         const results = await (0, database_1.executeQuery)(query);
         return results.map((result) => this.mapRow(result));

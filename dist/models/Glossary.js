@@ -12,7 +12,7 @@ class GlossaryTermModel {
         return await (0, database_1.executeInsert)(query, [term, definition, category, language, arabicTerm, arabicDefinition, frenchTerm, frenchDefinition, views, downloads, isActive]);
     }
     static async findAll() {
-        const query = 'SELECT * FROM glossary_terms WHERE is_active = true ORDER BY term ASC';
+        const query = 'SELECT * FROM glossary_terms WHERE is_active = true ORDER BY display_order ASC, term ASC, id ASC';
         const results = await (0, database_1.executeQuery)(query);
         return results.map(result => ({
             id: result.id,
@@ -55,7 +55,7 @@ class GlossaryTermModel {
         return null;
     }
     static async findByCategory(category) {
-        const query = 'SELECT * FROM glossary_terms WHERE category = ? AND is_active = true ORDER BY term ASC';
+        const query = 'SELECT * FROM glossary_terms WHERE category = ? AND is_active = true ORDER BY display_order ASC, term ASC, id ASC';
         const results = await (0, database_1.executeQuery)(query, [category]);
         return results.map(result => ({
             id: result.id,
@@ -75,7 +75,7 @@ class GlossaryTermModel {
         }));
     }
     static async findByLanguage(language) {
-        const query = 'SELECT * FROM glossary_terms WHERE language = ? AND is_active = true ORDER BY term ASC';
+        const query = 'SELECT * FROM glossary_terms WHERE language = ? AND is_active = true ORDER BY display_order ASC, term ASC, id ASC';
         const results = await (0, database_1.executeQuery)(query, [language]);
         return results.map(result => ({
             id: result.id,
@@ -95,7 +95,7 @@ class GlossaryTermModel {
         }));
     }
     static async search(searchTerm) {
-        const query = 'SELECT * FROM glossary_terms WHERE (term LIKE ? OR definition LIKE ?) AND is_active = true ORDER BY term ASC';
+        const query = 'SELECT * FROM glossary_terms WHERE (term LIKE ? OR definition LIKE ?) AND is_active = true ORDER BY display_order ASC, term ASC, id ASC';
         const searchPattern = `%${searchTerm}%`;
         const results = await (0, database_1.executeQuery)(query, [searchPattern, searchPattern]);
         return results.map(result => ({

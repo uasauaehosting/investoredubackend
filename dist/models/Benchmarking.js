@@ -44,7 +44,7 @@ class BenchmarkingModel {
             query += ' AND authority_name = ?';
             params.push(filters.authority);
         }
-        query += ' ORDER BY year DESC, authority_name ASC';
+        query += ' ORDER BY display_order ASC, year DESC, authority_name ASC, id DESC';
         const results = await (0, database_1.executeQuery)(query, params);
         return results.map(mapRow);
     }

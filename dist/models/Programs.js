@@ -4,7 +4,7 @@ exports.ProgramsModel = void 0;
 const database_1 = require("../utils/database");
 class ProgramsModel {
     static async findAll() {
-        const query = 'SELECT * FROM programs ORDER BY created_at DESC';
+        const query = 'SELECT * FROM programs ORDER BY display_order ASC, created_at DESC, id DESC';
         return (0, database_1.executeQuery)(query);
     }
     static async findById(id) {
@@ -13,11 +13,11 @@ class ProgramsModel {
         return results.length > 0 ? results[0] : null;
     }
     static async findByMember(memberName) {
-        const query = 'SELECT * FROM programs WHERE member_name = ? ORDER BY created_at DESC';
+        const query = 'SELECT * FROM programs WHERE member_name = ? ORDER BY display_order ASC, created_at DESC, id DESC';
         return (0, database_1.executeQuery)(query, [memberName]);
     }
     static async findActive() {
-        const query = 'SELECT * FROM programs WHERE is_active = true ORDER BY created_at DESC';
+        const query = 'SELECT * FROM programs WHERE is_active = true ORDER BY display_order ASC, created_at DESC, id DESC';
         return (0, database_1.executeQuery)(query);
     }
     static async create(data) {
@@ -130,7 +130,7 @@ class ProgramsModel {
         return affectedRows > 0;
     }
     static async search(searchTerm) {
-        const query = 'SELECT * FROM programs WHERE member_name LIKE ? ORDER BY created_at DESC';
+        const query = 'SELECT * FROM programs WHERE member_name LIKE ? ORDER BY display_order ASC, created_at DESC, id DESC';
         return (0, database_1.executeQuery)(query, [`%${searchTerm}%`]);
     }
     static async count() {

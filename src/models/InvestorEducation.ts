@@ -543,13 +543,13 @@ export class FrameworkModel {
   }
 
   static async findAll(): Promise<IFramework[]> {
-    const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY date DESC, id DESC';
+    const query = 'SELECT * FROM frameworks WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map((result) => FrameworkModel.mapFrameworkRow(result));
   }
 
   static async findAllAdmin(): Promise<IFramework[]> {
-    const query = 'SELECT * FROM frameworks ORDER BY date DESC, id DESC';
+    const query = 'SELECT * FROM frameworks ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map((result) => FrameworkModel.mapFrameworkRow(result));
   }
@@ -690,13 +690,13 @@ export class PrincipleModel {
   }
 
   static async findAll(): Promise<IPrinciple[]> {
-    const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY date DESC, id DESC';
+    const query = 'SELECT * FROM principles WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map((result) => PrincipleModel.mapPrincipleRow(result));
   }
 
   static async findAllAdmin(): Promise<IPrinciple[]> {
-    const query = 'SELECT * FROM principles ORDER BY date DESC, id DESC';
+    const query = 'SELECT * FROM principles ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map((result) => PrincipleModel.mapPrincipleRow(result));
   }
@@ -849,13 +849,13 @@ export class InvestmentProductModel {
   }
 
   static async findAll(): Promise<IInvestmentProduct[]> {
-    const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY date DESC, id DESC';
+    const query = 'SELECT * FROM investment_products WHERE is_active = true ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map((result) => mapInvestmentProductRow(result));
   }
 
   static async findAllAdmin(): Promise<IInvestmentProduct[]> {
-    const query = 'SELECT * FROM investment_products ORDER BY date DESC, id DESC';
+    const query = 'SELECT * FROM investment_products ORDER BY display_order ASC, date DESC, id DESC';
     const results = await executeQuery<any>(query);
     return results.map((result) => mapInvestmentProductRow(result));
   }
@@ -1137,7 +1137,7 @@ export class MemberStrategyProjectModel {
       FROM member_strategies_projects msp
       LEFT JOIN members m ON msp.member_id = m.id
       ${activeClause}
-      ORDER BY COALESCE(msp.authority_name, m.name), msp.type, msp.title
+      ORDER BY msp.display_order ASC, COALESCE(msp.authority_name, m.name), msp.type, msp.title
     `;
     const results = await executeQuery<Record<string, unknown>>(query);
     return results.map((result) => this.mapRow(result));

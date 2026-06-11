@@ -66,7 +66,7 @@ export class PublicationsModel {
       params.push(...filters.categories);
     }
 
-    query += ' ORDER BY date_published DESC, created_at DESC';
+    query += ' ORDER BY display_order ASC, date_published DESC, created_at DESC';
 
     return executeQuery<Publication>(query, params);
   }
