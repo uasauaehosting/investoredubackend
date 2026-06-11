@@ -855,7 +855,7 @@ router.put('/member-strategies-projects/:id', authenticate, authorize('Super Adm
   }
 });
 
-router.delete('/member-strategies-projects/:id', authenticate, authorize('Super Admin', 'Admin'), async (req: any, res: any) => {
+router.delete('/member-strategies-projects/:id', authenticate, authorize('Super Admin', 'Admin', 'Editor'), async (req: any, res: any) => {
   try {
     const deleted = await MemberStrategyProject.delete(parseInt(req.params.id));
     if (!deleted) {

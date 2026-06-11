@@ -1205,7 +1205,7 @@ export class MemberStrategyProjectModel {
   }
 
   static async delete(id: number): Promise<boolean> {
-    const query = 'UPDATE member_strategies_projects SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+    const query = 'DELETE FROM member_strategies_projects WHERE id = ?';
     const result = await executeUpdate(query, [id]);
     return result > 0;
   }
