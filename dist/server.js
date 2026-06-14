@@ -30,6 +30,52 @@ const initializeDatabase = async () => {
     }
 };
 initializeDatabase();
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+];
+if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+}
+if (process.env.FRONTEND_URLS) {
+    allowedOrigins.push(...process.env.FRONTEND_URLS.split(',').map((o) => o.trim()).filter(Boolean));
+}
+function isAllowedOrigin(origin) {
+    if (!origin)
+        return true;
+    if (process.env.NODE_ENV === 'development')
+        return true;
+    if (allowedOrigins.includes(origin))
+        return true;
+    try {
+        const { hostname } = new URL(origin);
+        return (hostname === 'ahwuae.com' ||
+            hostname.endsWith('.ahwuae.com') ||
+            hostname.endsWith('.vercel.app'));
+    }
+    catch {
+        return false;
+    }
+}
+const corsOptions = {
+    origin(origin, callback) {
+        if (isAllowedOrigin(origin)) {
+            callback(null, true);
+            return;
+        }
+        callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    optionsSuccessStatus: 204,
+};
+app.use((0, cors_1.default)(corsOptions));
+app.options('*', (0, cors_1.default)(corsOptions));
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'),
     max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'),
@@ -37,52 +83,16 @@ const limiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => {
+        if (req.method === 'OPTIONS')
+            return true;
         return process.env.NODE_ENV === 'development';
     }
 });
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use((0, compression_1.default)());
 app.use(limiter);
-app.use((0, cors_1.default)({
-    origin: function (origin, callback) {
-        if (!origin)
-            return callback(null, true);
-        const allowedOrigins = [
-            'http://localhost:5173',
-            'http://localhost:3000',
-            'http://localhost:8080',
-            'http://127.0.0.1:5173',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:8080',
-        ];
-        if (process.env.FRONTEND_URL) {
-            allowedOrigins.push(process.env.FRONTEND_URL);
-        }
-        if (process.env.FRONTEND_URLS) {
-            allowedOrigins.push(...process.env.FRONTEND_URLS.split(',').map((o) => o.trim()).filter(Boolean));
-        }
-        if (process.env.NODE_ENV === 'development') {
-            return callback(null, true);
-        }
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        try {
-            const { hostname } = new URL(origin);
-            if (hostname === 'ahwuae.com' ||
-                hostname.endsWith('.ahwuae.com') ||
-                hostname.endsWith('.vercel.app')) {
-                return callback(null, true);
-            }
-        }
-        catch {
-        }
-        return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
 app.use((0, morgan_1.default)('combined'));
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
