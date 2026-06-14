@@ -30,49 +30,16 @@ const initializeDatabase = async () => {
     }
 };
 initializeDatabase();
-const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:8080',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8080',
-];
-if (process.env.FRONTEND_URL) {
-    allowedOrigins.push(process.env.FRONTEND_URL);
-}
-if (process.env.FRONTEND_URLS) {
-    allowedOrigins.push(...process.env.FRONTEND_URLS.split(',').map((o) => o.trim()).filter(Boolean));
-}
-function isAllowedOrigin(origin) {
-    if (!origin)
-        return true;
-    if (process.env.NODE_ENV === 'development')
-        return true;
-    if (allowedOrigins.includes(origin))
-        return true;
-    try {
-        const { hostname } = new URL(origin);
-        return (hostname === 'ahwuae.com' ||
-            hostname.endsWith('.ahwuae.com') ||
-            hostname.endsWith('.vercel.app'));
-    }
-    catch {
-        return false;
-    }
-}
 const corsOptions = {
-    origin(origin, callback) {
-        if (isAllowedOrigin(origin)) {
-            callback(null, true);
-            return;
-        }
-        callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-    optionsSuccessStatus: 204,
+    origin: [
+        'https://www.ahwuae.com',
+        'https://ahwuae.com',
+        'https://investoreducation.ahwuae.com',
+        'http://localhost:5173',
+        'http://localhost:3000',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use((0, cors_1.default)(corsOptions));
 app.options('*', (0, cors_1.default)(corsOptions));
