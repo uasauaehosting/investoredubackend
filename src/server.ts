@@ -9,6 +9,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { initConnection } from './utils/database';
 import { ensureDisplayOrderColumns } from './utils/ensureDisplayOrder';
+import { ensureMediaUploadsTable } from './models/MediaUpload';
 import routes from './routes';
 import mediaRoutes from './routes/media';
 
@@ -23,6 +24,7 @@ const initializeDatabase = async () => {
     console.log('✅ MySQL database initialized successfully');
 
     await ensureDisplayOrderColumns();
+    await ensureMediaUploadsTable();
 
     console.log('Database initialization completed');
   } catch (error: any) {

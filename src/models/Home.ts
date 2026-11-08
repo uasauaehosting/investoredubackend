@@ -107,21 +107,14 @@ export class NewsModel {
 
   static async findById(id: number): Promise<INews | null> {
     const query = 'SELECT * FROM news WHERE id = ? AND is_active = true';
-    console.log('NewsModel.findById - Query:', query, 'ID:', id); // Debug log
     const result = await executeSingleQuery<any>(query, [id]);
-    console.log('NewsModel.findById - Raw result:', result); // Debug log
-    
     if (result) {
-      const newsItem = mapNewsRow(result);
-      console.log('NewsModel.findById - Processed result:', newsItem); // Debug log
-      return newsItem;
+      return mapNewsRow(result);
     }
     return null;
   }
 
   static async update(id: number, updateData: Partial<INews>): Promise<boolean> {
-    console.log('NewsModel.update - Input data:', updateData); // Debug log
-    
     const { title, titleAr, excerpt, excerptAr, fullDetail, fullDetailAr, category, link, image, pdfFile, date, displayOrder, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];

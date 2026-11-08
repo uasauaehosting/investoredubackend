@@ -1,15 +1,16 @@
 import express from 'express';
 import { PortalModel, CreatePortalData, UpdatePortalData, PortalFilters } from '../models/Portals';
+import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
-// GET /api/portals - Get all portals with optional filters
+// GET /api/portals - Get all portals with optional filters (public)
 router.get('/', async (req, res) => {
     try {
         const filters: PortalFilters = {
-            authority: req.query.authority as string,
-            country: req.query.country as string,
-            is_active: req.query.is_active === 'true' ? true : req.query.is_active === 'false' ? false : undefined
+            authority: req.query.authority as string | undefined,
+            country: req.query.country as string | undefined,
+            is_active: req.query.is_active === 'true' ? true : req.query.is_active === 'false' ? false : undefined,
         };
 
         const portals = await PortalModel.getAll(filters);
@@ -20,7 +21,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/portals/authorities - Get unique authorities
+// GET /api/portals/authorities - Get unique authorities (public)
 router.get('/authorities', async (req, res) => {
     try {
         const authorities = await PortalModel.getUniqueAuthorities();
@@ -31,7 +32,7 @@ router.get('/authorities', async (req, res) => {
     }
 });
 
-// GET /api/portals/countries - Get unique countries
+// GET /api/portals/countries - Get unique countries (public)
 router.get('/countries', async (req, res) => {
     try {
         const countries = await PortalModel.getUniqueCountries();
@@ -42,7 +43,7 @@ router.get('/countries', async (req, res) => {
     }
 });
 
-// GET /api/portals/:id - Get portal by ID
+// GET /api/portals/:id - Get portal by ID (public)
 router.get('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
@@ -62,11 +63,10 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST /api/portals - Create new portal
-router.post('/', async (req, res) => {
+// POST /api/portals - Create new portal (admin only)
+router.post('/', authenticate, authorize('Super Admin', 'Admin'), async (req: any, res: any) => {
     try {
         const portalData: CreatePortalData = req.body;
-
         const newPortal = await PortalModel.create(portalData);
         res.status(201).json(newPortal);
     } catch (error) {
@@ -75,8 +75,8 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT /api/portals/:id - Update portal
-router.put('/:id', async (req, res) => {
+// PUT /api/portals/:id - Update portal (admin only)
+router.put('/:id', authenticate, authorize('Super Admin', 'Admin'), async (req: any, res: any) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
@@ -97,8 +97,8 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE /api/portals/:id - Delete portal
-router.delete('/:id', async (req, res) => {
+// DELETE /api/portals/:id - Delete portal (admin only)
+router.delete('/:id', authenticate, authorize('Super Admin', 'Admin'), async (req: any, res: any) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {

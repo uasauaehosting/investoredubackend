@@ -110,23 +110,15 @@ router.post('/news', authenticate, authorize('Super Admin', 'Admin'), [
   body('excerpt').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
-    console.log('POST /news - Request body:', req.body); // Debug log
-    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('Validation errors:', errors.array()); // Debug log
       return res.status(400).json({ errors: errors.array() });
     }
 
     const newsId = await News.create(req.body);
-    console.log('Created news with ID:', newsId); // Debug log
-    
     const news = await News.findById(newsId);
-    console.log('Retrieved news:', news); // Debug log
-    
     res.status(201).json(news);
   } catch (error: any) {
-    console.error('Error creating news:', error); // Debug log
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -136,28 +128,19 @@ router.put('/news/:id', authenticate, authorize('Super Admin', 'Admin'), [
   body('excerpt').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
-    console.log('PUT /news/:id - Request body:', req.body); // Debug log
-    console.log('PUT /news/:id - Params:', req.params); // Debug log
-    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('Validation errors:', errors.array()); // Debug log
       return res.status(400).json({ errors: errors.array() });
     }
 
     const updated = await News.update(parseInt(req.params.id), req.body);
-    console.log('Updated news result:', updated); // Debug log
-    
     if (!updated) {
       return res.status(404).json({ message: 'News not found' });
     }
 
     const news = await News.findById(parseInt(req.params.id));
-    console.log('Retrieved updated news:', news); // Debug log
-    
     res.json(news);
   } catch (error: any) {
-    console.error('Error updating news:', error); // Debug log
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
