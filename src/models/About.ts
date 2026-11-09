@@ -6,6 +6,7 @@ export interface IAboutSection {
   titleAr?: string;
   content: string;
   contentAr?: string;
+  imageUrl?: string;
   order: number;
   isActive: boolean;
   createdAt?: Date;
@@ -26,12 +27,12 @@ export interface IContactInfo {
 // About Section Model
 export class AboutSectionModel {
   static async create(sectionData: Omit<IAboutSection, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { title, titleAr, content, contentAr, order, isActive } = sectionData;
+    const { title, titleAr, content, contentAr, imageUrl, order, isActive } = sectionData;
     const query = `
-      INSERT INTO about_sections (title, title_ar, content, content_ar, \`order\`, is_active)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO about_sections (title, title_ar, content, content_ar, image_url, \`order\`, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, titleAr ?? null, content, contentAr ?? null, order, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, content, contentAr ?? null, imageUrl ?? null, order, isActive]);
   }
 
   static async findAll(): Promise<IAboutSection[]> {
@@ -43,6 +44,7 @@ export class AboutSectionModel {
       titleAr: result.title_ar,
       content: result.content,
       contentAr: result.content_ar,
+      imageUrl: result.image_url,
       order: result.order,
       isActive: result.is_active,
       createdAt: result.created_at,
@@ -60,6 +62,7 @@ export class AboutSectionModel {
         titleAr: result.title_ar,
         content: result.content,
         contentAr: result.content_ar,
+        imageUrl: result.image_url,
         order: result.order,
         isActive: result.is_active,
         createdAt: result.created_at,
@@ -70,7 +73,7 @@ export class AboutSectionModel {
   }
 
   static async update(id: number, updateData: Partial<IAboutSection>): Promise<boolean> {
-    const { title, titleAr, content, contentAr, order, isActive } = updateData;
+    const { title, titleAr, content, contentAr, imageUrl, order, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -89,6 +92,10 @@ export class AboutSectionModel {
     if (contentAr !== undefined) {
       updateFields.push('content_ar = ?');
       updateValues.push(contentAr);
+    }
+    if (imageUrl !== undefined) {
+      updateFields.push('image_url = ?');
+      updateValues.push(imageUrl ?? null);
     }
     if (order !== undefined) {
       updateFields.push('`order` = ?');
