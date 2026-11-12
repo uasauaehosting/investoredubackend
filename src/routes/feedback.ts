@@ -10,6 +10,8 @@ router.post('/', [
   body('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
   body('subject').optional({ values: 'falsy' }),
   body('message').optional({ values: 'falsy' }),
+  body('organization').optional({ values: 'falsy' }),
+  body('country').optional({ values: 'falsy' }),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -17,7 +19,25 @@ router.post('/', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const feedbackId = await Feedback.create(req.body);
+    // Provide defaults for fields the form doesn't collect
+    const payload = {
+      name: req.body.name || '',
+      email: req.body.email || '',
+      phone: req.body.phone || null,
+      organization: req.body.organization || null,
+      country: req.body.country || null,
+      subject: req.body.subject || '',
+      message: req.body.message || '',
+      rating: req.body.rating ?? 0,
+      category: req.body.category || 'General',
+      status: 'Pending' as const,
+      response: null,
+      respondedBy: null,
+      respondedAt: null,
+      isActive: true,
+    };
+
+    const feedbackId = await Feedback.create(payload);
     const feedback = await Feedback.findById(feedbackId);
     res.status(201).json({ message: 'Feedback submitted successfully', feedback });
   } catch (error: any) {

@@ -393,17 +393,27 @@ CREATE TABLE IF NOT EXISTS site_content (
 
 -- ── Feedback ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS feedback (
-  id         INT          AUTO_INCREMENT PRIMARY KEY,
-  name       VARCHAR(100) NOT NULL,
-  email      VARCHAR(100) NOT NULL,
-  org        VARCHAR(255) DEFAULT NULL,
-  country    VARCHAR(100) DEFAULT NULL,
-  subject    VARCHAR(255) NOT NULL DEFAULT 'General',
-  message    TEXT         NOT NULL,
-  status     ENUM('Pending','Reviewed','Resolved') NOT NULL DEFAULT 'Pending',
-  created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_feedback_status (status)
+  id             INT          AUTO_INCREMENT PRIMARY KEY,
+  name           VARCHAR(100) NOT NULL,
+  email          VARCHAR(100) NOT NULL,
+  phone          VARCHAR(50)  DEFAULT NULL,
+  organization   VARCHAR(255) DEFAULT NULL,
+  country        VARCHAR(100) DEFAULT NULL,
+  subject        VARCHAR(255) NOT NULL DEFAULT 'General',
+  message        TEXT         NOT NULL,
+  rating         TINYINT      NOT NULL DEFAULT 0,
+  category       ENUM('General','Complaint','Suggestion','Technical Issue','Content Request')
+                              NOT NULL DEFAULT 'General',
+  status         ENUM('Pending','In Progress','Resolved','Closed')
+                              NOT NULL DEFAULT 'Pending',
+  response       TEXT         DEFAULT NULL,
+  responded_by   VARCHAR(100) DEFAULT NULL,
+  responded_at   DATETIME     DEFAULT NULL,
+  is_active      BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_feedback_status (status),
+  INDEX idx_feedback_active (is_active)
 );
 
 -- ── Media Uploads (audit log) ─────────────────────────────────

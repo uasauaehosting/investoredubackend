@@ -5,6 +5,8 @@ export interface IFeedback {
   name: string;
   email: string;
   phone?: string;
+  organization?: string;
+  country?: string;
   subject: string;
   message: string;
   rating: number;
@@ -20,12 +22,12 @@ export interface IFeedback {
 
 export class FeedbackModel {
   static async create(feedbackData: Omit<IFeedback, 'id' | 'createdAt' | 'updatedAt'>): Promise<number> {
-    const { name, email, phone, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = feedbackData;
+    const { name, email, phone, organization, country, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = feedbackData;
     const query = `
-      INSERT INTO feedback (name, email, phone, subject, message, rating, category, status, response, responded_by, responded_at, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO feedback (name, email, phone, organization, country, subject, message, rating, category, status, response, responded_by, responded_at, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [name, email, phone, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive]);
+    return await executeInsert(query, [name, email, phone, organization ?? null, country ?? null, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive]);
   }
 
   static async findAll(): Promise<IFeedback[]> {
@@ -36,6 +38,8 @@ export class FeedbackModel {
       name: result.name,
       email: result.email,
       phone: result.phone,
+      organization: result.organization,
+      country: result.country,
       subject: result.subject,
       message: result.message,
       rating: result.rating,
@@ -59,6 +63,8 @@ export class FeedbackModel {
         name: result.name,
         email: result.email,
         phone: result.phone,
+        organization: result.organization,
+        country: result.country,
         subject: result.subject,
         message: result.message,
         rating: result.rating,
@@ -83,6 +89,8 @@ export class FeedbackModel {
       name: result.name,
       email: result.email,
       phone: result.phone,
+      organization: result.organization,
+      country: result.country,
       subject: result.subject,
       message: result.message,
       rating: result.rating,
@@ -105,6 +113,8 @@ export class FeedbackModel {
       name: result.name,
       email: result.email,
       phone: result.phone,
+      organization: result.organization,
+      country: result.country,
       subject: result.subject,
       message: result.message,
       rating: result.rating,
@@ -127,6 +137,8 @@ export class FeedbackModel {
       name: result.name,
       email: result.email,
       phone: result.phone,
+      organization: result.organization,
+      country: result.country,
       subject: result.subject,
       message: result.message,
       rating: result.rating,
@@ -142,7 +154,7 @@ export class FeedbackModel {
   }
 
   static async update(id: number, updateData: Partial<IFeedback>): Promise<boolean> {
-    const { name, email, phone, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = updateData;
+    const { name, email, phone, organization, country, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = updateData;
     const updateFields: string[] = [];
     const updateValues: any[] = [];
 
@@ -157,6 +169,14 @@ export class FeedbackModel {
     if (phone !== undefined) {
       updateFields.push('phone = ?');
       updateValues.push(phone);
+    }
+    if (organization !== undefined) {
+      updateFields.push('organization = ?');
+      updateValues.push(organization);
+    }
+    if (country !== undefined) {
+      updateFields.push('country = ?');
+      updateValues.push(country);
     }
     if (subject !== undefined) {
       updateFields.push('subject = ?');
