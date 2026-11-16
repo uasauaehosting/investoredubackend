@@ -13,13 +13,31 @@ router.post('/', [
     (0, express_validator_1.body)('email').optional({ values: 'falsy' }).isEmail().withMessage('Valid email is required'),
     (0, express_validator_1.body)('subject').optional({ values: 'falsy' }),
     (0, express_validator_1.body)('message').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('organization').optional({ values: 'falsy' }),
+    (0, express_validator_1.body)('country').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        const feedbackId = await models_1.Feedback.create(req.body);
+        const payload = {
+            name: req.body.name || '',
+            email: req.body.email || '',
+            phone: req.body.phone || null,
+            organization: req.body.organization || null,
+            country: req.body.country || null,
+            subject: req.body.subject || '',
+            message: req.body.message || '',
+            rating: req.body.rating ?? 0,
+            category: req.body.category || 'General',
+            status: 'Pending',
+            response: null,
+            respondedBy: null,
+            respondedAt: null,
+            isActive: true,
+        };
+        const feedbackId = await models_1.Feedback.create(payload);
         const feedback = await models_1.Feedback.findById(feedbackId);
         res.status(201).json({ message: 'Feedback submitted successfully', feedback });
     }

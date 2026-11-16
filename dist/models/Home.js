@@ -44,18 +44,13 @@ class NewsModel {
     }
     static async findById(id) {
         const query = 'SELECT * FROM news WHERE id = ? AND is_active = true';
-        console.log('NewsModel.findById - Query:', query, 'ID:', id);
         const result = await (0, database_1.executeSingleQuery)(query, [id]);
-        console.log('NewsModel.findById - Raw result:', result);
         if (result) {
-            const newsItem = mapNewsRow(result);
-            console.log('NewsModel.findById - Processed result:', newsItem);
-            return newsItem;
+            return mapNewsRow(result);
         }
         return null;
     }
     static async update(id, updateData) {
-        console.log('NewsModel.update - Input data:', updateData);
         const { title, titleAr, excerpt, excerptAr, fullDetail, fullDetailAr, category, link, image, pdfFile, date, displayOrder, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];

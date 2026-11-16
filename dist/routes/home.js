@@ -109,20 +109,15 @@ router.post('/news', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', '
     (0, express_validator_1.body)('excerpt').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
-        console.log('POST /news - Request body:', req.body);
         const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
-            console.log('Validation errors:', errors.array());
             return res.status(400).json({ errors: errors.array() });
         }
         const newsId = await models_1.News.create(req.body);
-        console.log('Created news with ID:', newsId);
         const news = await models_1.News.findById(newsId);
-        console.log('Retrieved news:', news);
         res.status(201).json(news);
     }
     catch (error) {
-        console.error('Error creating news:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });
@@ -131,24 +126,18 @@ router.put('/news/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'
     (0, express_validator_1.body)('excerpt').optional({ values: 'falsy' }),
 ], async (req, res) => {
     try {
-        console.log('PUT /news/:id - Request body:', req.body);
-        console.log('PUT /news/:id - Params:', req.params);
         const errors = (0, express_validator_1.validationResult)(req);
         if (!errors.isEmpty()) {
-            console.log('Validation errors:', errors.array());
             return res.status(400).json({ errors: errors.array() });
         }
         const updated = await models_1.News.update(parseInt(req.params.id), req.body);
-        console.log('Updated news result:', updated);
         if (!updated) {
             return res.status(404).json({ message: 'News not found' });
         }
         const news = await models_1.News.findById(parseInt(req.params.id));
-        console.log('Retrieved updated news:', news);
         res.json(news);
     }
     catch (error) {
-        console.error('Error updating news:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 });

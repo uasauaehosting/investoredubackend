@@ -459,12 +459,15 @@ router.post('/principles', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
         }
         const principleData = {
             title: req.body.title,
+            titleAr: req.body.titleAr || null,
             description: req.body.description,
+            descriptionAr: req.body.descriptionAr || null,
             author: req.body.author || '',
             date: new Date(req.body.date),
             fileUrl: req.body.fileUrl || '',
             imageUrl: req.body.imageUrl || '',
             content: req.body.content || '',
+            contentAr: req.body.contentAr || null,
             authorityId: req.body.authorityId || null,
             categoryId: req.body.categoryId || null,
             views: req.body.views || 0,

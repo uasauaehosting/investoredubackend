@@ -4,12 +4,12 @@ exports.Feedback = exports.FeedbackModel = void 0;
 const database_1 = require("../utils/database");
 class FeedbackModel {
     static async create(feedbackData) {
-        const { name, email, phone, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = feedbackData;
+        const { name, email, phone, organization, country, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = feedbackData;
         const query = `
-      INSERT INTO feedback (name, email, phone, subject, message, rating, category, status, response, responded_by, responded_at, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO feedback (name, email, phone, organization, country, subject, message, rating, category, status, response, responded_by, responded_at, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [name, email, phone, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive]);
+        return await (0, database_1.executeInsert)(query, [name, email, phone, organization ?? null, country ?? null, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive]);
     }
     static async findAll() {
         const query = 'SELECT * FROM feedback WHERE is_active = true ORDER BY created_at DESC';
@@ -19,6 +19,8 @@ class FeedbackModel {
             name: result.name,
             email: result.email,
             phone: result.phone,
+            organization: result.organization,
+            country: result.country,
             subject: result.subject,
             message: result.message,
             rating: result.rating,
@@ -41,6 +43,8 @@ class FeedbackModel {
                 name: result.name,
                 email: result.email,
                 phone: result.phone,
+                organization: result.organization,
+                country: result.country,
                 subject: result.subject,
                 message: result.message,
                 rating: result.rating,
@@ -64,6 +68,8 @@ class FeedbackModel {
             name: result.name,
             email: result.email,
             phone: result.phone,
+            organization: result.organization,
+            country: result.country,
             subject: result.subject,
             message: result.message,
             rating: result.rating,
@@ -85,6 +91,8 @@ class FeedbackModel {
             name: result.name,
             email: result.email,
             phone: result.phone,
+            organization: result.organization,
+            country: result.country,
             subject: result.subject,
             message: result.message,
             rating: result.rating,
@@ -106,6 +114,8 @@ class FeedbackModel {
             name: result.name,
             email: result.email,
             phone: result.phone,
+            organization: result.organization,
+            country: result.country,
             subject: result.subject,
             message: result.message,
             rating: result.rating,
@@ -120,7 +130,7 @@ class FeedbackModel {
         }));
     }
     static async update(id, updateData) {
-        const { name, email, phone, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = updateData;
+        const { name, email, phone, organization, country, subject, message, rating, category, status, response, respondedBy, respondedAt, isActive } = updateData;
         const updateFields = [];
         const updateValues = [];
         if (name !== undefined) {
@@ -134,6 +144,14 @@ class FeedbackModel {
         if (phone !== undefined) {
             updateFields.push('phone = ?');
             updateValues.push(phone);
+        }
+        if (organization !== undefined) {
+            updateFields.push('organization = ?');
+            updateValues.push(organization);
+        }
+        if (country !== undefined) {
+            updateFields.push('country = ?');
+            updateValues.push(country);
         }
         if (subject !== undefined) {
             updateFields.push('subject = ?');

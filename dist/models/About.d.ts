@@ -4,6 +4,7 @@ export interface IAboutSection {
     titleAr?: string;
     content: string;
     contentAr?: string;
+    imageUrl?: string;
     order: number;
     isActive: boolean;
     createdAt?: Date;

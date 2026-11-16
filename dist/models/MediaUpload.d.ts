@@ -9,8 +9,8 @@ export interface MediaUploadRecord {
     uploaded_by: number | null;
     created_at: Date;
 }
+export declare function ensureMediaUploadsTable(): Promise<void>;
 export declare class MediaUploadModel {
-    static ensureTable(): Promise<void>;
     static create(data: {
         filename: string;
         originalName: string;

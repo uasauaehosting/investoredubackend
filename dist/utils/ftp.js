@@ -217,13 +217,28 @@ async function uploadToFtp(buffer, filename, remoteDir) {
 async function uploadMediaFile(buffer, filename) {
     const publicUrl = getPublicUploadUrl(filename);
     const failures = [];
-    for (const dir of getDirectUploadCandidates()) {
+    const directPathEnv = process.env.UPLOAD_DIRECT_PATH?.trim();
+    if (directPathEnv) {
+        try {
+            await writeDirectUpload(buffer, filename, directPathEnv);
+            console.log(`Direct upload succeeded: ${directPathEnv}/${filename}`);
+            return publicUrl;
+        }
+        catch (error) {
+            failures.push(`direct ${directPathEnv}: ${error.message}`);
+        }
+    }
+    const fallbackDirs = getDirectUploadCandidates().filter((dir) => !directPathEnv || dir !== path_1.default.resolve(directPathEnv));
+    for (const dir of fallbackDirs) {
         try {
             await writeDirectUpload(buffer, filename, dir);
-            if (await verifyPublicUploadReachable(filename)) {
-                return publicUrl;
-            }
-            failures.push(`direct ${dir}: stored but public URL not reachable yet`);
+            console.log(`Direct upload succeeded (fallback path): ${dir}/${filename}`);
+            verifyPublicUploadReachable(filename).then((ok) => {
+                if (!ok) {
+                    console.warn(`File written to ${dir}/${filename} but public URL check failed — file may still be accessible via web server`);
+                }
+            }).catch(() => { });
+            return publicUrl;
         }
         catch (error) {
             failures.push(`direct ${dir}: ${error.message}`);
@@ -233,10 +248,7 @@ async function uploadMediaFile(buffer, filename) {
         try {
             await uploadToFtp(buffer, filename, remoteDir);
             await verifyFtpRoundtrip(buffer, filename);
-            if (await verifyPublicUploadReachable(filename)) {
-                return publicUrl;
-            }
-            console.warn(`Upload stored at FTP ${remoteDir}/${filename} but public URL check failed; returning URL anyway`);
+            console.log(`FTP upload succeeded: ${remoteDir}/${filename}`);
             return publicUrl;
         }
         catch (error) {
@@ -244,7 +256,7 @@ async function uploadMediaFile(buffer, filename) {
         }
     }
     throw new Error(`Upload failed for ${filename}. ${failures.join(' | ')}. ` +
-        `Set FTP_REMOTE_PATH=${exports.DEFAULT_FTP_REMOTE_PATH} or UPLOAD_DIRECT_PATH on the server.`);
+        `Set UPLOAD_DIRECT_PATH to the absolute path of your uploads folder on the server.`);
 }
 async function downloadFromFtp(filename) {
     if (!isSafeUploadFilename(filename)) {

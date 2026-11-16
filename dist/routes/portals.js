@@ -5,13 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const Portals_1 = require("../models/Portals");
+const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
 router.get('/', async (req, res) => {
     try {
         const filters = {
             authority: req.query.authority,
             country: req.query.country,
-            is_active: req.query.is_active === 'true' ? true : req.query.is_active === 'false' ? false : undefined
+            is_active: req.query.is_active === 'true' ? true : req.query.is_active === 'false' ? false : undefined,
         };
         const portals = await Portals_1.PortalModel.getAll(filters);
         res.json(portals);
@@ -58,7 +59,7 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch portal' });
     }
 });
-router.post('/', async (req, res) => {
+router.post('/', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
     try {
         const portalData = req.body;
         const newPortal = await Portals_1.PortalModel.create(portalData);
@@ -69,7 +70,7 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: 'Failed to create portal' });
     }
 });
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {
@@ -87,7 +88,7 @@ router.put('/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to update portal' });
     }
 });
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Admin', 'Admin'), async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         if (isNaN(id)) {

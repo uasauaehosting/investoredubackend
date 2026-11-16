@@ -48,6 +48,5 @@ export declare class AlertsBulletinsModel {
     static getUniqueAuthorities(): Promise<string[]>;
     static getUniqueYears(): Promise<string[]>;
     static getUniqueTypes(): Promise<string[]>;
-    private static getMockData;
 }
 //# sourceMappingURL=AlertsBulletins.d.ts.map

@@ -48,6 +48,5 @@ export declare class PortalModel {
     static delete(id: number): Promise<boolean>;
     static getUniqueAuthorities(): Promise<string[]>;
     static getUniqueCountries(): Promise<string[]>;
-    private static getMockData;
 }
 //# sourceMappingURL=Portals.d.ts.map

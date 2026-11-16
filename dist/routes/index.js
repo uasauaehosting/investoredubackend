@@ -20,6 +20,7 @@ const upload_1 = __importDefault(require("./upload"));
 const site_content_1 = __importDefault(require("./site-content"));
 const benchmarking_1 = __importDefault(require("./benchmarking"));
 const reorder_1 = __importDefault(require("./reorder"));
+const search_1 = __importDefault(require("./search"));
 const router = express_1.default.Router();
 router.use('/auth', auth_1.default);
 router.use('/home', home_1.default);
@@ -37,6 +38,7 @@ router.use('/upload', upload_1.default);
 router.use('/site-content', site_content_1.default);
 router.use('/benchmarking', benchmarking_1.default);
 router.use('/reorder', reorder_1.default);
+router.use('/search', search_1.default);
 router.get('/health', (req, res) => {
     res.json({
         status: 'OK',

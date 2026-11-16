@@ -3,6 +3,8 @@ export interface IFeedback {
     name: string;
     email: string;
     phone?: string;
+    organization?: string;
+    country?: string;
     subject: string;
     message: string;
     rating: number;
