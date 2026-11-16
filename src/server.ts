@@ -16,6 +16,10 @@ import mediaRoutes from './routes/media';
 const app = express();
 const PORT = process.env.PORT || 5001;
 
+// Behind Hostinger's LiteSpeed reverse proxy, so trust the first proxy hop
+// (X-Forwarded-For) to rate-limit per real client IP instead of the shared proxy IP.
+app.set('trust proxy', 1);
+
 // Initialize database connections
 const initializeDatabase = async () => {
   try {
@@ -44,13 +48,20 @@ const limiter = rateLimit({
   legacyHeaders: false,
   skip: (req) => {
     // Skip rate limiting for development
-    return process.env.NODE_ENV === 'development';
+    if (process.env.NODE_ENV === 'development') return true;
+    // Never rate-limit CORS preflight requests, otherwise the 429 response
+    // carries no Access-Control-Allow-Origin header and the browser reports
+    // a misleading CORS error.
+    if (req.method === 'OPTIONS') return true;
+    return false;
   }
 });
 
 app.use(helmet());
 app.use(compression());
-app.use(limiter);
+
+// CORS must be registered before the rate limiter so that every response
+// (including 429s) carries the Access-Control-Allow-Origin header.
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -100,6 +111,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+app.use(limiter);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

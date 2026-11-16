@@ -17,6 +17,7 @@ const MediaUpload_1 = require("./models/MediaUpload");
 const routes_1 = __importDefault(require("./routes"));
 const media_1 = __importDefault(require("./routes/media"));
 const app = (0, express_1.default)();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5001;
 const initializeDatabase = async () => {
     try {
@@ -39,12 +40,15 @@ const limiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => {
-        return process.env.NODE_ENV === 'development';
+        if (process.env.NODE_ENV === 'development')
+            return true;
+        if (req.method === 'OPTIONS')
+            return true;
+        return false;
     }
 });
 app.use((0, helmet_1.default)());
 app.use((0, compression_1.default)());
-app.use(limiter);
 app.use((0, cors_1.default)({
     origin: function (origin, callback) {
         if (!origin)
@@ -85,6 +89,7 @@ app.use((0, cors_1.default)({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+app.use(limiter);
 app.use((0, morgan_1.default)('combined'));
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
