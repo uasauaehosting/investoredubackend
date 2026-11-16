@@ -257,31 +257,48 @@ export async function uploadMediaFile(buffer: Buffer, filename: string): Promise
   const publicUrl = getPublicUploadUrl(filename);
   const failures: string[] = [];
 
-  for (const dir of getDirectUploadCandidates()) {
+  // UPLOAD_DIRECT_PATH env var is the authoritative path — if set, use it exclusively
+  // and trust the write without an HTTP reachability check (server-to-server HTTP is
+  // often blocked on Hostinger, causing false failures even when the file is written OK).
+  const directPathEnv = process.env.UPLOAD_DIRECT_PATH?.trim();
+  if (directPathEnv) {
+    try {
+      await writeDirectUpload(buffer, filename, directPathEnv);
+      console.log(`Direct upload succeeded: ${directPathEnv}/${filename}`);
+      return publicUrl;
+    } catch (error: any) {
+      failures.push(`direct ${directPathEnv}: ${error.message}`);
+      // Fall through to FTP below
+    }
+  }
+
+  // Try additional well-known Hostinger paths (write-and-trust, no HTTP check)
+  const fallbackDirs = getDirectUploadCandidates().filter(
+    (dir) => !directPathEnv || dir !== path.resolve(directPathEnv)
+  );
+
+  for (const dir of fallbackDirs) {
     try {
       await writeDirectUpload(buffer, filename, dir);
-      if (await verifyPublicUploadReachable(filename)) {
-        return publicUrl;
-      }
-      failures.push(`direct ${dir}: stored but public URL not reachable yet`);
+      console.log(`Direct upload succeeded (fallback path): ${dir}/${filename}`);
+      // Verify the file is reachable only as a background best-effort; don't block on it
+      verifyPublicUploadReachable(filename).then((ok) => {
+        if (!ok) {
+          console.warn(`File written to ${dir}/${filename} but public URL check failed — file may still be accessible via web server`);
+        }
+      }).catch(() => {/* ignore */});
+      return publicUrl;
     } catch (error: any) {
       failures.push(`direct ${dir}: ${error.message}`);
     }
   }
 
+  // Fall back to FTP if all direct writes failed
   for (const remoteDir of getFtpUploadCandidates()) {
     try {
       await uploadToFtp(buffer, filename, remoteDir);
       await verifyFtpRoundtrip(buffer, filename);
-
-      if (await verifyPublicUploadReachable(filename)) {
-        return publicUrl;
-      }
-
-      // FTP storage confirmed; CDN may lag or block server-side checks.
-      console.warn(
-        `Upload stored at FTP ${remoteDir}/${filename} but public URL check failed; returning URL anyway`
-      );
+      console.log(`FTP upload succeeded: ${remoteDir}/${filename}`);
       return publicUrl;
     } catch (error: any) {
       failures.push(`ftp ${remoteDir}: ${error.message}`);
@@ -290,7 +307,7 @@ export async function uploadMediaFile(buffer: Buffer, filename: string): Promise
 
   throw new Error(
     `Upload failed for ${filename}. ${failures.join(' | ')}. ` +
-      `Set FTP_REMOTE_PATH=${DEFAULT_FTP_REMOTE_PATH} or UPLOAD_DIRECT_PATH on the server.`
+      `Set UPLOAD_DIRECT_PATH to the absolute path of your uploads folder on the server.`
   );
 }
 
