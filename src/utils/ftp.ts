@@ -24,7 +24,11 @@ export function isFtpConfigured(): boolean {
   );
 }
 
-export const DEFAULT_FTP_REMOTE_PATH = '/investorupload';
+// The FTP account is chrooted to the uploads web root: the FTP session starts
+// already inside "/investorupload", so the web-served uploads folder is simply
+// "uploads" relative to the FTP root. Using an absolute path here would create a
+// nested duplicate folder that is never served over the web.
+export const DEFAULT_FTP_REMOTE_PATH = 'uploads';
 export const DEFAULT_FTP_PUBLIC_BASE_URL = 'https://ahwuae.com/investorupload/uploads';
 
 const WRONG_FTP_REMOTE_PATHS = new Set([
@@ -32,6 +36,11 @@ const WRONG_FTP_REMOTE_PATHS = new Set([
   'investoredu/investoredu/uploads',
   '/investoredu/uploads',
   'investoredu/uploads',
+  // Absolute paths are wrong for this chrooted FTP account (see above).
+  '/investorupload',
+  'investorupload',
+  '/investorupload/uploads',
+  '/uploads',
 ]);
 
 const LEGACY_PUBLIC_BASE_URLS = [
@@ -56,12 +65,11 @@ export function resolvePublicBaseUrl(): string {
   return envBase;
 }
 
+// FTP-relative legacy folders only — absolute server paths are not valid here
+// because the FTP account is chrooted to the uploads web root.
 const LEGACY_FTP_REMOTE_PATHS = [
   '/investoredu/investoredu/uploads',
   '/investoredu/uploads',
-  '/home/u827794112/domains/ahwuae.com/public_html/investoredu/investoredu/uploads',
-  '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
-  '/home/u827794112/domains/ahwuae.com/public_html/investorupload/uploads',
 ];
 
 function normalizeRemotePath(remotePath: string): string {
@@ -99,19 +107,21 @@ export function getFtpConfig(): FtpConfig {
 }
 
 function getDirectUploadCandidates(): string[] {
+  // Only folders that the web server actually serves belong here. Writing to any
+  // other location produces a URL that 404s (an upload that "succeeds" but never
+  // shows up), which is exactly the bug this list used to cause.
   const candidates = [
     process.env.UPLOAD_DIRECT_PATH?.trim(),
     '/home/u827794112/domains/ahwuae.com/public_html/investorupload/uploads',
-    '/home/u827794112/investorupload/uploads',
-    '/home/u827794112/investoredu/uploads',
-    '/home/u827794112/domains/ahwuae.com/public_html/investoredu/uploads',
   ].filter(Boolean) as string[];
 
   return [...new Set(candidates.map((dir) => path.resolve(dir)))];
 }
 
 function getFtpUploadCandidates(): string[] {
-  return [...new Set([resolveRemotePath(), DEFAULT_FTP_REMOTE_PATH, ...LEGACY_FTP_REMOTE_PATHS].map(normalizeRemotePath))];
+  // The FTP session starts inside the uploads web root, so files go into
+  // "uploads" relative to that root in order to be publicly served.
+  return [...new Set([resolveRemotePath(), DEFAULT_FTP_REMOTE_PATH].map(normalizeRemotePath))];
 }
 
 async function writeDirectUpload(buffer: Buffer, filename: string, dir: string): Promise<void> {
@@ -224,7 +234,10 @@ export function isSafeUploadFilename(filename: string): boolean {
 export async function uploadToFtp(buffer: Buffer, filename: string, remoteDir?: string): Promise<string> {
   const config = getFtpConfig();
   const client = new Client(60000);
-  const targetDir = normalizeRemotePath(remoteDir || config.remotePath);
+  const configuredDir = normalizeRemotePath(remoteDir || config.remotePath);
+  // ensureDir() changes the FTP working directory, so always address the file with
+  // an absolute path — a relative path would resolve inside the folder twice.
+  const targetDir = configuredDir.startsWith('/') ? configuredDir : `/${configuredDir}`;
 
   try {
     await client.access({
@@ -252,62 +265,55 @@ export async function uploadToFtp(buffer: Buffer, filename: string, remoteDir?: 
   }
 }
 
-/** Upload via direct filesystem and/or FTP; confirm file is stored correctly. */
+/** Upload via FTP (verified) with a direct-filesystem fallback. */
 export async function uploadMediaFile(buffer: Buffer, filename: string): Promise<string> {
   const publicUrl = getPublicUploadUrl(filename);
   const failures: string[] = [];
 
-  // UPLOAD_DIRECT_PATH env var is the authoritative path — if set, use it exclusively
-  // and trust the write without an HTTP reachability check (server-to-server HTTP is
-  // often blocked on Hostinger, causing false failures even when the file is written OK).
-  const directPathEnv = process.env.UPLOAD_DIRECT_PATH?.trim();
-  if (directPathEnv) {
-    try {
-      await writeDirectUpload(buffer, filename, directPathEnv);
-      console.log(`Direct upload succeeded: ${directPathEnv}/${filename}`);
-      return publicUrl;
-    } catch (error: any) {
-      failures.push(`direct ${directPathEnv}: ${error.message}`);
-      // Fall through to FTP below
-    }
-  }
-
-  // Try additional well-known Hostinger paths (write-and-trust, no HTTP check)
-  const fallbackDirs = getDirectUploadCandidates().filter(
-    (dir) => !directPathEnv || dir !== path.resolve(directPathEnv)
-  );
-
-  for (const dir of fallbackDirs) {
-    try {
-      await writeDirectUpload(buffer, filename, dir);
-      console.log(`Direct upload succeeded (fallback path): ${dir}/${filename}`);
-      // Verify the file is reachable only as a background best-effort; don't block on it
-      verifyPublicUploadReachable(filename).then((ok) => {
+  // Best-effort and non-blocking: Hostinger sometimes blocks server-to-server
+  // HTTP, so this only logs a warning and never fails the upload itself.
+  const warnIfUnreachable = () => {
+    verifyPublicUploadReachable(filename)
+      .then((ok) => {
         if (!ok) {
-          console.warn(`File written to ${dir}/${filename} but public URL check failed — file may still be accessible via web server`);
+          console.warn(
+            `Uploaded ${filename} but its public URL is not reachable — check that the uploads folder is web-served.`
+          );
         }
-      }).catch(() => {/* ignore */});
-      return publicUrl;
-    } catch (error: any) {
-      failures.push(`direct ${dir}: ${error.message}`);
-    }
-  }
+      })
+      .catch(() => {/* ignore */});
+  };
 
-  // Fall back to FTP if all direct writes failed
+  // 1) FTP first. The FTP account is chrooted to the uploads web root, so a
+  //    roundtrip-verified upload into "uploads" is guaranteed to be web-served.
   for (const remoteDir of getFtpUploadCandidates()) {
     try {
       await uploadToFtp(buffer, filename, remoteDir);
       await verifyFtpRoundtrip(buffer, filename);
       console.log(`FTP upload succeeded: ${remoteDir}/${filename}`);
+      warnIfUnreachable();
       return publicUrl;
     } catch (error: any) {
       failures.push(`ftp ${remoteDir}: ${error.message}`);
     }
   }
 
+  // 2) Fall back to writing straight into the web-served uploads folder on disk.
+  for (const dir of getDirectUploadCandidates()) {
+    try {
+      await writeDirectUpload(buffer, filename, dir);
+      console.log(`Direct upload succeeded: ${dir}/${filename}`);
+      warnIfUnreachable();
+      return publicUrl;
+    } catch (error: any) {
+      failures.push(`direct ${dir}: ${error.message}`);
+    }
+  }
+
   throw new Error(
     `Upload failed for ${filename}. ${failures.join(' | ')}. ` +
-      `Set UPLOAD_DIRECT_PATH to the absolute path of your uploads folder on the server.`
+      `Check FTP_HOST/FTP_USER/FTP_PASSWORD, or set UPLOAD_DIRECT_PATH to the absolute path ` +
+      `of the web-served uploads folder on the server.`
   );
 }
 
@@ -334,7 +340,8 @@ export async function downloadFromFtp(filename: string): Promise<Buffer> {
 
     try {
       for (const remoteDir of remoteDirs) {
-        const remoteFile = path.posix.join(remoteDir, filename);
+        const absDir = remoteDir.startsWith('/') ? remoteDir : `/${remoteDir}`;
+        const remoteFile = path.posix.join(absDir, filename);
         try {
           await client.downloadTo(tmpPath, remoteFile);
           return fs.readFileSync(tmpPath);
