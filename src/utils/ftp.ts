@@ -135,15 +135,6 @@ async function writeDirectUpload(buffer: Buffer, filename: string, dir: string):
   }
 }
 
-async function verifyFtpRoundtrip(buffer: Buffer, filename: string): Promise<void> {
-  const downloaded = await downloadFromFtp(filename);
-  if (downloaded.length !== buffer.length) {
-    throw new Error(
-      `FTP roundtrip failed for ${filename} (expected ${buffer.length}, got ${downloaded.length})`
-    );
-  }
-}
-
 /** Verify the uploaded file is reachable at its public URL (Hostinger CDN). */
 export async function verifyPublicUploadReachable(filename: string): Promise<boolean> {
   const url = getPublicUploadUrl(filename);
@@ -284,12 +275,12 @@ export async function uploadMediaFile(buffer: Buffer, filename: string): Promise
       .catch(() => {/* ignore */});
   };
 
-  // 1) FTP first. The FTP account is chrooted to the uploads web root, so a
-  //    roundtrip-verified upload into "uploads" is guaranteed to be web-served.
+  // 1) FTP first. The FTP account is chrooted to the uploads web root, so an
+  //    upload into "uploads" is guaranteed to be web-served. uploadToFtp() already
+  //    verifies the stored size, so no extra download roundtrip is needed.
   for (const remoteDir of getFtpUploadCandidates()) {
     try {
       await uploadToFtp(buffer, filename, remoteDir);
-      await verifyFtpRoundtrip(buffer, filename);
       console.log(`FTP upload succeeded: ${remoteDir}/${filename}`);
       warnIfUnreachable();
       return publicUrl;

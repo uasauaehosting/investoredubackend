@@ -9,6 +9,7 @@ export interface Portal {
     description: string;
     descriptionAr?: string;
     image_url: string;
+    imageAr?: string;
     link: string;
     authority_name: string;
     authority_nameAr?: string;
@@ -28,6 +29,7 @@ export interface CreatePortalData {
     description: string;
     descriptionAr?: string;
     image_url: string;
+    imageAr?: string;
     link: string;
     authority_name: string;
     authority_nameAr?: string;
@@ -55,6 +57,7 @@ const PORTAL_UPDATE_FIELD_MAP: Record<keyof UpdatePortalData, string> = {
     description:        'description',
     descriptionAr:      'description_ar',
     image_url:          'image_url',
+    imageAr:            'image_ar',
     link:               'link',
     authority_name:     'authority_name',
     authority_nameAr:   'authority_name_ar',
@@ -103,20 +106,20 @@ export class PortalModel {
     static async create(data: CreatePortalData): Promise<Portal> {
         const {
             title, titleAr, short_title, short_titleAr,
-            description, descriptionAr, image_url, link,
+            description, descriptionAr, image_url, imageAr, link,
             authority_name, authority_nameAr, country, countryAr,
             display_order = 0,
         } = data;
         const query = `
             INSERT INTO portals 
             (title, title_ar, short_title, short_title_ar, description, description_ar,
-             image_url, link, authority_name, authority_name_ar, country, country_ar,
+             image_url, image_ar, link, authority_name, authority_name_ar, country, country_ar,
              display_order, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
         `;
         const insertId = await executeInsert(query, [
             title, titleAr ?? null, short_title, short_titleAr ?? null,
-            description, descriptionAr ?? null, image_url, link,
+            description, descriptionAr ?? null, image_url, imageAr ?? null, link,
             authority_name, authority_nameAr ?? null, country, countryAr ?? null,
             display_order,
         ]);
