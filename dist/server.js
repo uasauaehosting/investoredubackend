@@ -17,8 +17,8 @@ const MediaUpload_1 = require("./models/MediaUpload");
 const routes_1 = __importDefault(require("./routes"));
 const media_1 = __importDefault(require("./routes/media"));
 const app = (0, express_1.default)();
-app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5001;
+app.set('trust proxy', 1);
 const initializeDatabase = async () => {
     try {
         await (0, database_1.initConnection)();

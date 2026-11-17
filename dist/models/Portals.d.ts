@@ -7,6 +7,7 @@ export interface Portal {
     description: string;
     descriptionAr?: string;
     image_url: string;
+    imageAr?: string;
     link: string;
     authority_name: string;
     authority_nameAr?: string;
@@ -25,6 +26,7 @@ export interface CreatePortalData {
     description: string;
     descriptionAr?: string;
     image_url: string;
+    imageAr?: string;
     link: string;
     authority_name: string;
     authority_nameAr?: string;

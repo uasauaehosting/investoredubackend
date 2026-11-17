@@ -103,6 +103,11 @@ async function seedSiteContent() {
                 { icon: 'Shield', title: 'Investor Protection', description: 'Understand your rights and how to protect yourself from fraud and financial misconduct.' },
                 { icon: 'Globe', title: 'Arab Capital Markets', description: 'Explore opportunities across Arab financial markets with informed confidence.' },
             ],
+            highlightsAr: [
+                { icon: 'TrendingUp', title: 'الاستثمار الذكي', description: 'تعلّم استراتيجيات مبنية على الأدلة لتنمية ثروتك وتحقيق أهدافك المالية.' },
+                { icon: 'Shield', title: 'حماية المستثمر', description: 'افهم حقوقك وكيف تحمي نفسك من الاحتيال والسلوك المالي غير المشروع.' },
+                { icon: 'Globe', title: 'أسواق المال العربية', description: 'استكشف الفرص في الأسواق المالية العربية بثقة ومعرفة.' },
+            ],
         },
         'home.portal_section': {
             heroImage: '/images/portal-hero.png',

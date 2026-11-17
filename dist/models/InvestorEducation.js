@@ -882,6 +882,8 @@ class MemberStrategyProjectModel {
             end_date: result.end_date ?? null,
             budget: result.budget != null ? Number(result.budget) : undefined,
             isActive: result.is_active !== false && result.is_active !== 0,
+            isActiveEn: result.is_active_en !== false && result.is_active_en !== 0,
+            isActiveAr: result.is_active_ar !== false && result.is_active_ar !== 0,
             createdAt: result.created_at,
             updatedAt: result.updated_at,
             memberName: authorityName,
@@ -891,12 +893,12 @@ class MemberStrategyProjectModel {
         };
     }
     static async create(projectData) {
-        const { title, titleAr, description, descriptionAr, authority_name, type, file_url, isActive = true } = projectData;
+        const { title, titleAr, description, descriptionAr, authority_name, type, file_url, isActive = true, isActiveEn = true, isActiveAr = true } = projectData;
         const query = `
-      INSERT INTO member_strategies_projects (title, title_ar, description, description_ar, authority_name, type, status, file_url, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?)
+      INSERT INTO member_strategies_projects (title, title_ar, description, description_ar, authority_name, type, status, file_url, is_active, is_active_en, is_active_ar)
+      VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?)
     `;
-        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, authority_name, type, file_url ?? null, isActive]);
+        return await (0, database_1.executeInsert)(query, [title, titleAr ?? null, description, descriptionAr ?? null, authority_name, type, file_url ?? null, isActive, isActiveEn, isActiveAr]);
     }
     static async findAll(options = {}) {
         const activeClause = options.includeInactive ? '' : 'WHERE msp.is_active = true';
@@ -955,6 +957,14 @@ class MemberStrategyProjectModel {
         if (updateData.isActive !== undefined) {
             fields.push('is_active = ?');
             values.push(updateData.isActive);
+        }
+        if (updateData.isActiveEn !== undefined) {
+            fields.push('is_active_en = ?');
+            values.push(updateData.isActiveEn);
+        }
+        if (updateData.isActiveAr !== undefined) {
+            fields.push('is_active_ar = ?');
+            values.push(updateData.isActiveAr);
         }
         if (fields.length === 0) {
             return false;

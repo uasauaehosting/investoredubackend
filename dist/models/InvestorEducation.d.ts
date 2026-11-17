@@ -125,6 +125,8 @@ export interface IMemberStrategyProject {
     end_date?: Date | string | null;
     budget?: number;
     isActive: boolean;
+    isActiveEn: boolean;
+    isActiveAr: boolean;
     createdAt?: Date;
     updatedAt?: Date;
     memberName?: string;
@@ -217,6 +219,8 @@ export declare class MemberStrategyProjectModel {
         type: StrategyProjectType | string;
         file_url?: string | null;
         isActive?: boolean;
+        isActiveEn?: boolean;
+        isActiveAr?: boolean;
     }): Promise<number>;
     static findAll(options?: {
         includeInactive?: boolean;

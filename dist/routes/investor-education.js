@@ -729,6 +729,8 @@ router.post('/member-strategies-projects', auth_1.authenticate, (0, auth_1.autho
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('file_url', 'File URL must be a valid URL'),
     (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
+    (0, express_validator_1.body)('isActiveEn').optional().isBoolean().withMessage('isActiveEn must be a boolean'),
+    (0, express_validator_1.body)('isActiveAr').optional().isBoolean().withMessage('isActiveAr must be a boolean'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -742,6 +744,8 @@ router.post('/member-strategies-projects', auth_1.authenticate, (0, auth_1.autho
             type: req.body.type,
             file_url: req.body.fileUrl || req.body.file_url || null,
             isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+            isActiveEn: req.body.isActiveEn !== undefined ? req.body.isActiveEn : true,
+            isActiveAr: req.body.isActiveAr !== undefined ? req.body.isActiveAr : true,
         });
         const project = await models_1.MemberStrategyProject.findById(projectId, true);
         res.status(201).json(project);
@@ -756,6 +760,8 @@ router.put('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.au
     optionalUrl('fileUrl', 'File URL must be a valid URL'),
     optionalUrl('file_url', 'File URL must be a valid URL'),
     (0, express_validator_1.body)('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
+    (0, express_validator_1.body)('isActiveEn').optional().isBoolean().withMessage('isActiveEn must be a boolean'),
+    (0, express_validator_1.body)('isActiveAr').optional().isBoolean().withMessage('isActiveAr must be a boolean'),
 ], async (req, res) => {
     try {
         const errors = (0, express_validator_1.validationResult)(req);
@@ -769,6 +775,8 @@ router.put('/member-strategies-projects/:id', auth_1.authenticate, (0, auth_1.au
             type: req.body.type,
             fileUrl: req.body.fileUrl ?? req.body.file_url,
             isActive: req.body.isActive,
+            isActiveEn: req.body.isActiveEn,
+            isActiveAr: req.body.isActiveAr,
         });
         if (!updated) {
             return res.status(404).json({ message: 'Project not found' });
@@ -803,9 +811,12 @@ router.get('/content', async (req, res) => {
             id: item.id,
             section: item.section,
             title: item.title,
+            titleAr: item.titleAr ?? null,
             description: item.description,
+            descriptionAr: item.descriptionAr ?? null,
             imageUrl: item.imageUrl,
             content: item.content,
+            contentAr: item.contentAr ?? null,
             displayOrder: item.displayOrder,
             isActive: item.isActive,
         })));
@@ -822,9 +833,12 @@ router.get('/content/admin', auth_1.authenticate, (0, auth_1.authorize)('Super A
             id: item.id,
             section: item.section,
             title: item.title,
+            titleAr: item.titleAr ?? null,
             description: item.description,
+            descriptionAr: item.descriptionAr ?? null,
             imageUrl: item.imageUrl,
             content: item.content,
+            contentAr: item.contentAr ?? null,
             displayOrder: item.displayOrder,
             isActive: item.isActive,
         })));
@@ -843,9 +857,12 @@ router.get('/content/:id', async (req, res) => {
             id: item.id,
             section: item.section,
             title: item.title,
+            titleAr: item.titleAr ?? null,
             description: item.description,
+            descriptionAr: item.descriptionAr ?? null,
             imageUrl: item.imageUrl,
             content: item.content,
+            contentAr: item.contentAr ?? null,
             displayOrder: item.displayOrder,
             isActive: item.isActive,
         });
@@ -859,9 +876,12 @@ router.post('/content', auth_1.authenticate, (0, auth_1.authorize)('Super Admin'
         const id = await models_1.EducationContent.create({
             section: req.body.section,
             title: req.body.title,
+            titleAr: req.body.titleAr ?? null,
             description: req.body.description,
+            descriptionAr: req.body.descriptionAr ?? null,
             imageUrl: req.body.imageUrl ?? null,
             content: req.body.content ?? null,
+            contentAr: req.body.contentAr ?? null,
             displayOrder: req.body.displayOrder ?? 0,
             isActive: req.body.isActive !== false,
         });
@@ -877,9 +897,12 @@ router.put('/content/:id', auth_1.authenticate, (0, auth_1.authorize)('Super Adm
         const updated = await models_1.EducationContent.update(parseInt(req.params.id), {
             section: req.body.section,
             title: req.body.title,
+            titleAr: req.body.titleAr,
             description: req.body.description,
+            descriptionAr: req.body.descriptionAr,
             imageUrl: req.body.imageUrl,
             content: req.body.content,
+            contentAr: req.body.contentAr,
             displayOrder: req.body.displayOrder,
             isActive: req.body.isActive,
         });
