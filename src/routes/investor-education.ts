@@ -803,6 +803,8 @@ router.post('/member-strategies-projects', authenticate, authorize('Super Admin'
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('file_url', 'File URL must be a valid URL'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
+  body('isActiveEn').optional().isBoolean().withMessage('isActiveEn must be a boolean'),
+  body('isActiveAr').optional().isBoolean().withMessage('isActiveAr must be a boolean'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -817,6 +819,8 @@ router.post('/member-strategies-projects', authenticate, authorize('Super Admin'
       type: req.body.type,
       file_url: req.body.fileUrl || req.body.file_url || null,
       isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+      isActiveEn: req.body.isActiveEn !== undefined ? req.body.isActiveEn : true,
+      isActiveAr: req.body.isActiveAr !== undefined ? req.body.isActiveAr : true,
     });
 
     const project = await MemberStrategyProject.findById(projectId, true);
@@ -832,6 +836,8 @@ router.put('/member-strategies-projects/:id', authenticate, authorize('Super Adm
   optionalUrl('fileUrl', 'File URL must be a valid URL'),
   optionalUrl('file_url', 'File URL must be a valid URL'),
   body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
+  body('isActiveEn').optional().isBoolean().withMessage('isActiveEn must be a boolean'),
+  body('isActiveAr').optional().isBoolean().withMessage('isActiveAr must be a boolean'),
 ], async (req: any, res: any) => {
   try {
     const errors = validationResult(req);
@@ -846,6 +852,8 @@ router.put('/member-strategies-projects/:id', authenticate, authorize('Super Adm
       type: req.body.type,
       fileUrl: req.body.fileUrl ?? req.body.file_url,
       isActive: req.body.isActive,
+      isActiveEn: req.body.isActiveEn,
+      isActiveAr: req.body.isActiveAr,
     });
     if (!updated) {
       return res.status(404).json({ message: 'Project not found' });

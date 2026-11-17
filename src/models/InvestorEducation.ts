@@ -135,6 +135,10 @@ export interface IMemberStrategyProject {
   end_date?: Date | string | null;
   budget?: number;
   isActive: boolean;
+  /** Whether the English version is visible on the public site */
+  isActiveEn: boolean;
+  /** Whether the Arabic version is visible on the public site */
+  isActiveAr: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   memberName?: string;
@@ -1103,6 +1107,8 @@ export class MemberStrategyProjectModel {
       end_date: (result.end_date as string | null) ?? null,
       budget: result.budget != null ? Number(result.budget) : undefined,
       isActive: result.is_active !== false && result.is_active !== 0,
+      isActiveEn: result.is_active_en !== false && result.is_active_en !== 0,
+      isActiveAr: result.is_active_ar !== false && result.is_active_ar !== 0,
       createdAt: result.created_at as Date | undefined,
       updatedAt: result.updated_at as Date | undefined,
       memberName: authorityName,
@@ -1121,13 +1127,15 @@ export class MemberStrategyProjectModel {
     type: StrategyProjectType | string;
     file_url?: string | null;
     isActive?: boolean;
+    isActiveEn?: boolean;
+    isActiveAr?: boolean;
   }): Promise<number> {
-    const { title, titleAr, description, descriptionAr, authority_name, type, file_url, isActive = true } = projectData;
+    const { title, titleAr, description, descriptionAr, authority_name, type, file_url, isActive = true, isActiveEn = true, isActiveAr = true } = projectData;
     const query = `
-      INSERT INTO member_strategies_projects (title, title_ar, description, description_ar, authority_name, type, status, file_url, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?)
+      INSERT INTO member_strategies_projects (title, title_ar, description, description_ar, authority_name, type, status, file_url, is_active, is_active_en, is_active_ar)
+      VALUES (?, ?, ?, ?, ?, ?, 'Active', ?, ?, ?, ?)
     `;
-    return await executeInsert(query, [title, titleAr ?? null, description, descriptionAr ?? null, authority_name, type, file_url ?? null, isActive]);
+    return await executeInsert(query, [title, titleAr ?? null, description, descriptionAr ?? null, authority_name, type, file_url ?? null, isActive, isActiveEn, isActiveAr]);
   }
 
   static async findAll(options: { includeInactive?: boolean } = {}): Promise<IMemberStrategyProject[]> {
@@ -1190,6 +1198,14 @@ export class MemberStrategyProjectModel {
     if (updateData.isActive !== undefined) {
       fields.push('is_active = ?');
       values.push(updateData.isActive);
+    }
+    if (updateData.isActiveEn !== undefined) {
+      fields.push('is_active_en = ?');
+      values.push(updateData.isActiveEn);
+    }
+    if (updateData.isActiveAr !== undefined) {
+      fields.push('is_active_ar = ?');
+      values.push(updateData.isActiveAr);
     }
 
     if (fields.length === 0) {
